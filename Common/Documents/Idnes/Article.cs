@@ -31,13 +31,13 @@ namespace Common.Documents.Idnes
 
         public string GetRelevantText()
         {
-            string s = Headline + "\n" + Opener + "\n" + Text + "\n";
+            string s = Headline + "\n" + Opener + "\n"; // + Text + "\n";
 
             foreach (string author in Authors)
             {
-                s += author + " ";
+                //s += author + " ";
             }
-            s += "\n";
+            //s += "\n";
 
 
             foreach (string tag in Tags)
@@ -49,13 +49,13 @@ namespace Common.Documents.Idnes
 
             foreach (string related in RelatedArticles)
             {
-                s += related + "\n";
+                //s += related + "\n";
             }
 
 
             foreach (Comment comment in Comments)
             {
-                s += comment.GetRelevantText() + "\n";
+                //s += comment.GetRelevantText() + "\n";
             }
 
             return s;

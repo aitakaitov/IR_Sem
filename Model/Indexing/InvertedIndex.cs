@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using Model.Queries;
+using Common.Documents.Basic;
 
 namespace Model.Indexing
 {
@@ -12,15 +15,23 @@ namespace Model.Indexing
     {
         public bool Indexed { get; private set; } = false;
 
+        /** Preprocessing */
         private Analyzer Analyzer;
 
+        /** Not used right now */
         private IndexConfig Config;
 
-        private List<IDocument> Documents;
+        /** Documents - position is document ID */
+        private List<IDocument> Documents = new();
 
+        /** Inverted index */
         private Dictionary<int, InvertedIndexValue> DocumentIndex = new();
 
+        /** Term - Term Id mapping */
         private Dictionary<string, int> TermIdDictionary = new();
+
+        /** Term Id - Term mapping */
+        private Dictionary<int, string> IdTermDictionary = new();
 
 
         public InvertedIndex(Analyzer analyzer, IndexConfig indexConfig)
@@ -50,12 +61,10 @@ namespace Model.Indexing
             for (int i = 0; i < uniqueTerms.Count; i++)
             {
                 TermIdDictionary[uniqueTerms[i]] = i;
+                IdTermDictionary[i] = uniqueTerms[i];
             }
 
             CreateInvertedIndex(postings);
-
-            throw new NotImplementedException();
-            Documents = documents;
             Indexed = true;
         }
 
@@ -110,9 +119,125 @@ namespace Model.Indexing
             throw new NotImplementedException();
         }
 
-        public void VectorSpaceSearch()
+        public List<IDocument> VectorSpaceSearch(VectorQuery query)
         {
-            throw new NotImplementedException();
+            var queryVector = GetQueryVector(query);
+            double queryVectorNorm = CalculateVectorNorm(queryVector);
+            Dictionary<int, double> DocIdSimilarityDictionary = new();
+            for (int i = 0; i < Documents.Count; i++)
+            {
+                var documentVector = GetDocumentVector(i);
+                DocIdSimilarityDictionary.Add(i, CalculateCosineSimilarity(documentVector, queryVector, queryVectorNorm));
+            }
+
+            List<IDocument> results = new();
+            int count = 0;
+            foreach (var doc in DocIdSimilarityDictionary.OrderByDescending(key => key.Value))
+            {
+                if (count == query.TopCount)
+                {
+                    break;
+                }
+                results.Add(Documents[doc.Key]);
+                Debug.Print($"Result {count + 1} cosine: {doc.Value}");
+                count++;
+            }
+
+            return results;
+        }
+
+        private double CalculateCosineSimilarity(double[] documentVector, double[] queryVector, double queryVectorNorm)
+        {
+            return CalculateDotProduct(documentVector, queryVector) / (CalculateVectorNorm(documentVector) * queryVectorNorm);
+        }
+
+        private double CalculateDotProduct(double[] v1, double[] v2)
+        {
+            return v1.Zip(v2, (d1, d2) => d1 * d2).Sum();
+        }
+
+        private double CalculateVectorNorm(double[] vector)
+        {
+            double norm = Math.Sqrt(
+                CalculateDotProduct(vector, vector)
+            );
+            return norm;
+        }
+
+        private double[] GetDocumentVector(int docId)
+        {
+            var vector = new double[TermIdDictionary.Count];
+            for (int i = 0; i < vector.Length; i++) { vector[i] = 0; }
+
+            foreach (var termId in DocumentIndex.Keys)
+            {
+                if (DocumentIndex[termId].Documents.Keys.Contains(docId))
+                {
+                    vector[termId] = DocumentIndex[termId].Documents[docId].TermFrequency;
+                    vector[termId] = CalculateTFIDF((int)vector[termId], DocumentIndex[termId].DocumentFrequency);
+                }
+            }
+
+            return vector;
+        }
+
+        private double[] GetQueryVector(VectorQuery query)
+        {
+            List<string> queryTokens = Analyzer.Preprocess(new Document() { Text = query.QueryText });
+            List<int> tokenIds = new List<int>();
+            foreach (var token in queryTokens)
+            {
+                if (TermIdDictionary.ContainsKey(token))
+                {
+                    tokenIds.Add(TermIdDictionary[token]);
+                }
+            }
+
+            var vector = new double[TermIdDictionary.Count];
+            for (int i = 0; i < vector.Length; i++) { vector[i] = 0; }
+
+            foreach (var termId in tokenIds)
+            {
+                vector[termId] += 1;
+            }
+
+            for (int i = 0; i < vector.Length; i++)
+            {
+                if (vector[i] != 0)
+                {
+                    vector[i] = CalculateTFIDF((int)vector[i], DocumentIndex[i].DocumentFrequency);
+                }
+            }
+
+            return vector;
+        }
+
+        private double CalculateTFIDF(int tf, int df)
+        {
+            if (tf == 0) { return 0; }
+            double termFreq = 1 + Math.Log10(tf);
+            double idf = Math.Log10(Documents.Count / (double)df);
+
+            return termFreq * idf;
+        }
+
+
+
+
+        /** DEBUG */
+        public void PrintIndex()
+        {
+            foreach (var key in DocumentIndex.Keys)
+            {
+                var value = DocumentIndex[key];
+                var term = IdTermDictionary[key];
+                string output = term.ToString() + $"\tDF:{value.DocumentFrequency} -";
+                foreach (var val in value.Documents)
+                {
+                    output += $" (DocId: {val.Value.DocumentId}, TermFreq: {val.Value.TermFrequency}),";
+                }
+                Trace.WriteLine(output);
+            }
         }
     }
 

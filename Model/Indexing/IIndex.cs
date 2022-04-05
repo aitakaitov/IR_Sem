@@ -1,4 +1,5 @@
 ﻿using Common.Documents;
+using Model.Queries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,6 @@ namespace Model.Indexing
 
         public void BooleanSearch();
 
-        public void VectorSpaceSearch();
+        public List<IDocument> VectorSpaceSearch(VectorQuery query);
     }
 }
