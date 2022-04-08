@@ -25,7 +25,10 @@ WIP
 ### Searching
 
 * TF-IDF ranked vector  OK
-* Boolean               N/A
+* Boolean               WIP
+    * Tokenizing        OK
+    * Tree parse        WIP
+    * Searching         N/A
 * BERT                  N/A
 
 ## GUI
