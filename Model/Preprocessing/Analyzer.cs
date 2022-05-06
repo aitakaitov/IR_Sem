@@ -20,11 +20,16 @@ namespace Model.Preprocessing
             Tokenizer = tokenizer;
             Stemmer = stemmer;
             Config = config;
-            Stopwords = stopwords;
             if (stopwords == null)
             {
                 // Initialize empty stopwords
-                stopwords = new Stopwords();
+                Stopwords = new Stopwords();
+            }
+            else
+            {
+                // Automatically propagate config
+                Stopwords = stopwords;
+                Stopwords.SetConfig(config);
             }
         }
 
@@ -47,12 +52,13 @@ namespace Model.Preprocessing
             }
 
             var tokens = Tokenizer.Tokenize(text);
-            tokens = Stopwords.RemoveStopwords(tokens);
 
             if (Config.PerformStemming)
             {
                 tokens = Stemmer.StemTokens(tokens);
             }
+
+            tokens = Stopwords.RemoveStopwords(tokens);
 
             return tokens;
         }

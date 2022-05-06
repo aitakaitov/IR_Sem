@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Common.Documents.Idnes
 {
+    /** IDnes article - for parsing JSON */
     public class Article : IDocument
     {
         public Article(string headline, string opener, string text, string published, string modified,
@@ -29,9 +30,10 @@ namespace Common.Documents.Idnes
         public List<string> RelatedArticles { get; set; }
         public List<Comment> Comments { get; set; }
 
+        // Ignore authors, related articles and comments for now
         public string GetRelevantText()
         {
-            string s = Headline + "\n" + Opener + "\n"; // + Text + "\n";
+            string s = Headline + "\n" + Opener + "\n" + Text + "\n";
 
             foreach (string author in Authors)
             {

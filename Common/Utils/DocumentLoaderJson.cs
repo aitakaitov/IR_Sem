@@ -11,6 +11,12 @@ namespace Common.Utils
 {
     public class DocumentLoaderJson
     {
+        /// <summary>
+        /// Loads all JSON files for a directory into the specified IDocument
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="directoryPath"></param>
+        /// <returns></returns>
         public static List<T> Load<T>(string directoryPath) where T : IDocument
         {
             List<T> documents = new();

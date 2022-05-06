@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Model.Queries;
 using Common.Documents.Basic;
+using System.IO;
+using Common.Utils;
 
 namespace Model.Indexing
 {
@@ -23,6 +25,7 @@ namespace Model.Indexing
 
         /** Documents - position is document ID */
         private List<IDocument> Documents = new();
+        private List<int> DocumentIDs = new();
 
         /** Inverted index */
         private Dictionary<int, InvertedIndexValue> DocumentIndex = new();
@@ -47,6 +50,7 @@ namespace Model.Indexing
                 throw new InvalidOperationException("This index does not support indexing of additional data. Create a new index and index all the data needed.");
             }
 
+            // Create postings
             List<Posting> postings = new List<Posting>();
             for (int i = 0; i < documents.Count; i++)
             {
@@ -55,8 +59,10 @@ namespace Model.Indexing
                 CreatePostings(postings, tokens, i);
 
                 Documents.Add(document);
+                DocumentIDs.Add(i);
             }
 
+            // Generate dictionary
             var uniqueTerms = GetUniqueTerms(postings);
             for (int i = 0; i < uniqueTerms.Count; i++)
             {
@@ -64,6 +70,7 @@ namespace Model.Indexing
                 IdTermDictionary[i] = uniqueTerms[i];
             }
 
+            // Turn postings into inverted index
             CreateInvertedIndex(postings);
             Indexed = true;
         }
@@ -114,22 +121,124 @@ namespace Model.Indexing
             }
         }
 
-        public void BooleanSearch()
+        public (List<IDocument>, int) BooleanSearch(BasicQuery query)
         {
-            throw new NotImplementedException();
-        }
+            ParserNode parsedQuery = BooleanQueryParser.ParseQuery(query.QueryText);
+            var documentIds = GetDocumentsForQuery(parsedQuery);
 
-        public List<IDocument> VectorSpaceSearch(VectorQuery query)
-        {
-            var queryVector = GetQueryVector(query);
-            double queryVectorNorm = CalculateVectorNorm(queryVector);
-            Dictionary<int, double> DocIdSimilarityDictionary = new();
-            for (int i = 0; i < Documents.Count; i++)
+            int totalCount = documentIds.Count;
+            List<IDocument> documents = new();
+            for (int i = 0; i < Math.Min(totalCount, query.TopCount); i++)
             {
-                var documentVector = GetDocumentVector(i);
-                DocIdSimilarityDictionary.Add(i, CalculateCosineSimilarity(documentVector, queryVector, queryVectorNorm));
+                documents.Add(Documents[documentIds[i]]);
             }
 
+            return (documents, totalCount);
+        }
+
+        private List<int> BooleanSearchIds(string query)
+        {
+            ParserNode parsedQuery = BooleanQueryParser.ParseQuery(query);
+            var documentIds = GetDocumentsForQuery(parsedQuery);
+            return documentIds;
+        }
+
+        private List<int> GetDocumentsForQuery(ParserNode queryNode)
+        {
+            if (queryNode.Type == ParserNode.NodeType.TERM)
+            {
+                return GetDocumentsForTerm(queryNode.Text);
+            }
+            else
+            {
+                if (queryNode.Type == ParserNode.NodeType.NOT)
+                {
+                    // Parser uses LeftChild for the NOT nodes
+                    var documentIds = GetDocumentsForQuery(queryNode.LeftChild);
+                    return DocumentIDs.Except(documentIds).ToList();
+                }
+                else
+                {
+                    var documentIdsLeft = GetDocumentsForQuery(queryNode.LeftChild);
+                    var documentIdsRight = GetDocumentsForQuery(queryNode.RightChild);
+
+                    if (documentIdsLeft == null && documentIdsRight == null)
+                    {
+                        // No results
+                        return null;
+                    }
+                    else if (documentIdsLeft == null)
+                    {
+                        // Pass right
+                        return documentIdsRight;
+                    }
+                    else if (documentIdsRight == null)
+                    {
+                        // Pass left
+                        return documentIdsLeft;
+                    }
+
+                    if (queryNode.Type == ParserNode.NodeType.AND)
+                    {
+                        return documentIdsLeft.Intersect(documentIdsRight).ToList();
+                    }
+                    else // OR
+                    {
+                        return documentIdsLeft.Union(documentIdsRight).ToList();
+                    }
+                }
+            }
+        }
+
+        private List<int> GetDocumentsForTerm(string unprocessedTerm)
+        {
+            var res = Analyzer.Preprocess(new Document() { Text = unprocessedTerm });
+            if (res.Count() == 0)
+            {
+                return DocumentIDs;
+            }
+            else
+            {
+                var processedTerm = res[0];
+                if (!TermIdDictionary.Keys.Contains(processedTerm))
+                {
+                    return null;
+                }
+                else
+                {
+                    List<int> ids = new();
+                    foreach (var documentValue in DocumentIndex[TermIdDictionary[processedTerm]].Documents)
+                    {
+                        ids.Add(documentValue.Key);
+                    }
+                    return ids;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs TF-IDF vector-space search returning top K IDocuments and number of non-zero cosine similarity documents
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns>tuple of (top K IDocs, count)</returns>
+        public (List<IDocument>, int) VectorSpaceSearch(BasicQuery query)
+        {
+            // Get TF-IDF vector for query
+            var queryVector = GetQueryVector(query);
+            // Pre-compute vector norm
+            double queryVectorNorm = CalculateVectorNorm(queryVector);
+            // Narrow the documents with boolean search
+            var prefilteredDocuments = BooleanSearchIds(query.QueryText);
+            // Get TF-IDF vector for all documents and calculate cosine similarity to query vector
+            Dictionary<int, double> DocIdSimilarityDictionary = new();
+            foreach (var docId in prefilteredDocuments)
+            {
+                var documentVector = GetDocumentVector(docId);
+                var cosineSimilarity = CalculateCosineSimilarity(documentVector, queryVector, queryVectorNorm);
+                DocIdSimilarityDictionary.Add(docId, cosineSimilarity);
+            }
+
+            // Get top K results
             List<IDocument> results = new();
             int count = 0;
             foreach (var doc in DocIdSimilarityDictionary.OrderByDescending(key => key.Value))
@@ -143,7 +252,7 @@ namespace Model.Indexing
                 count++;
             }
 
-            return results;
+            return (results, DocIdSimilarityDictionary.Where((id, cos) => cos != 0).Count());
         }
 
         private double CalculateCosineSimilarity(double[] documentVector, double[] queryVector, double queryVectorNorm)
@@ -167,8 +276,13 @@ namespace Model.Indexing
         private double[] GetDocumentVector(int docId)
         {
             var vector = new double[TermIdDictionary.Count];
-            for (int i = 0; i < vector.Length; i++) { vector[i] = 0; }
+            // Initialize to 0, since if TF == 0, TF-IDF == 0
+            for (int i = 0; i < vector.Length; i++)
+            {
+                vector[i] = 0;
+            }
 
+            // Replace 0 with TF-IDF values for each term present in the document
             foreach (var termId in DocumentIndex.Keys)
             {
                 if (DocumentIndex[termId].Documents.Keys.Contains(docId))
@@ -181,10 +295,12 @@ namespace Model.Indexing
             return vector;
         }
 
-        private double[] GetQueryVector(VectorQuery query)
+        private double[] GetQueryVector(BasicQuery query)
         {
+            // Preprocess the query
             List<string> queryTokens = Analyzer.Preprocess(new Document() { Text = query.QueryText });
             List<int> tokenIds = new List<int>();
+            // Turn tokens into term-ids
             foreach (var token in queryTokens)
             {
                 if (TermIdDictionary.ContainsKey(token))
@@ -193,14 +309,20 @@ namespace Model.Indexing
                 }
             }
 
+            // Create query vector, init to 0
             var vector = new double[TermIdDictionary.Count];
-            for (int i = 0; i < vector.Length; i++) { vector[i] = 0; }
+            for (int i = 0; i < vector.Length; i++)
+            {
+                vector[i] = 0;
+            }
 
+            // Calculate term frequency of the query
             foreach (var termId in tokenIds)
             {
                 vector[termId] += 1;
             }
 
+            // Calculate TF-IDF using the now-calculated TF values and IDF values from inverted index
             for (int i = 0; i < vector.Length; i++)
             {
                 if (vector[i] != 0)
@@ -236,7 +358,7 @@ namespace Model.Indexing
                 {
                     output += $" (DocId: {val.Value.DocumentId}, TermFreq: {val.Value.TermFrequency}),";
                 }
-                Trace.WriteLine(output);
+                Console.WriteLine(output);
             }
         }
     }
@@ -254,6 +376,7 @@ namespace Model.Indexing
         public int DocumentId;
         public int TermFrequency;
 
+        // To make adding them to SortedList easier during the construction of the inverted index
         public bool Equals(DocumentValue? other)
         {
             if (other == null) return false;
@@ -268,4 +391,5 @@ namespace Model.Indexing
     }
 
     internal record Posting(string Term, int DocumentId);
+
 }

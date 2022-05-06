@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Common.Documents.Basic
 {
+    /** Basic document representation for testing purposes */
     public class Document : IDocument
     {
         public string Text { get; set; }

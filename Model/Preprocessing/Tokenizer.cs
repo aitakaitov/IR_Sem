@@ -75,7 +75,6 @@ namespace Model.Preprocessing
             text = Regex.Replace(text, "\\s+", " ");
             var tokens = Regex.Split(text, DefaultRegexString, RegexOptions.Compiled);
             var tokenList = FilterTokens(tokens);
-            //var validTokens = Stopwords.RemoveStopwords(tokenList);
 
             return tokenList;
         }
