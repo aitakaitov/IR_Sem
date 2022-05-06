@@ -6,11 +6,7 @@
 * Tokenizing    OK
 * JSON parse    OK
 * Accents       OK
-* Stopwords     WIP
-
-### Tests
-
-WIP
+* Stopwords     OK
 
 ## Indexing
 
@@ -18,19 +14,16 @@ WIP
 * TF-IDF          OK
 * BERT            N/A
 
-### Tests
-
-WIP
-
-### Searching
+## Searching
 
 * TF-IDF ranked vector  OK
-* Boolean               WIP
+* Boolean               OK
     * Tokenizing        OK
-    * Tree parse        WIP
-    * Searching         N/A
+    * Tree parse        OK
+    * Searching         OK
 * BERT                  N/A
 
 ## GUI
 
-N/A
+* Main Window 
+    * ...
