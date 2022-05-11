@@ -18,6 +18,7 @@ namespace Controller
     {
         public IIndex SelectedIndex { get; set; }
         public ObservableCollection<IIndex> AvailableIndexes { get; set; } = new();
+        public ObservableCollection<string> RelevantDocuments { get; set; } = new();
 
         public IIndex CreateIndex(CreateIndexRequest request)
         {
@@ -30,7 +31,7 @@ namespace Controller
 
             IStopwords stopwords = VerifyAndLoadStopwords(request.StopwordsFilePath);
             IStemmer stemmer = null;
-            if (config.PerformStemming) 
+            if (config.PerformStemming)
             {
                 stemmer = new Stemmer();
             }
@@ -63,6 +64,30 @@ namespace Controller
         public void DeleteIndex(IIndex index)
         {
             AvailableIndexes.Remove(index);
+        }
+
+        public void MakeBooleanQuery(string queryText)
+        {
+            var documents = SelectedIndex.BooleanSearch(new()
+            {
+                QueryText = queryText,
+                TopCount = 10
+            });
+
+            RelevantDocuments.Clear();
+            documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
+        }
+
+        public void MakeVectorQuery(string queryText)
+        {
+            var documents = SelectedIndex.VectorSpaceSearch(new()
+            {
+                QueryText = queryText,
+                TopCount = 10
+            });
+
+            RelevantDocuments.Clear();
+            documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
         }
     }
 }

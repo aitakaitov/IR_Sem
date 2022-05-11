@@ -22,6 +22,7 @@ using System.Diagnostics;
 using Model.Queries;
 using System.Collections.ObjectModel;
 using View.Dialogs;
+using View;
 
 namespace IR_Sem
 {
@@ -60,8 +61,6 @@ namespace IR_Sem
                     Name = result.Name
                 });
                 Controller.SelectedIndex = newIndex;
-                /*var i = Controller.AvailableIndexes.IndexOf(newIndex);
-                IndexComboBox.SelectedIndex = i;*/
                 loadingDialog.Close();
             }
             catch (Exception ex)
@@ -108,6 +107,50 @@ namespace IR_Sem
             {
                 IndexComboBox.SelectedIndex = 0;
             }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Controller.SelectedIndex == null || Controller.AvailableIndexes.Count == 0)
+            {
+                MessageBox.Show("No index selected");
+                return;
+            }
+
+            if (BooleanSelector.IsChecked.HasValue)
+            {
+                if (BooleanSelector.IsChecked.Value)
+                {
+                    Controller.MakeBooleanQuery(QueryBox.Text);
+                    CheckResultsNotEmpty();
+                    return;
+                }
+            }
+
+            if (VectorSelector.IsChecked.HasValue)
+            {
+                if (VectorSelector.IsChecked.Value)
+                {
+                    Controller.MakeVectorQuery(QueryBox.Text);
+                    CheckResultsNotEmpty();
+                    return;
+                }
+            }
+        }
+
+        private void CheckResultsNotEmpty()
+        {
+            if (Controller.RelevantDocuments.Count == 0)
+            {
+                MessageBox.Show("No results found");
+            }
+        }
+
+        private void ListBoxItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            DocumentPreview documentPreview = new DocumentPreview(ResultsView.SelectedItem as string);
+            documentPreview.Title = "Document Preview";
+            documentPreview.Show();
         }
     }
 }

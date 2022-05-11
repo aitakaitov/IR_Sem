@@ -129,6 +129,11 @@ namespace Model.Indexing
             ParserNode parsedQuery = BooleanQueryParser.ParseQuery(query.QueryText);
             var documentIds = GetDocumentsForQuery(parsedQuery);
 
+            if (documentIds == null)
+            {
+                return (new(), 0);
+            }
+
             int totalCount = documentIds.Count;
             List<IDocument> documents = new();
             for (int i = 0; i < Math.Min(totalCount, query.TopCount); i++)
@@ -232,6 +237,12 @@ namespace Model.Indexing
             double queryVectorNorm = CalculateVectorNorm(queryVector);
             // Narrow the documents with boolean search
             var prefilteredDocuments = BooleanSearchIds(query.QueryText);
+
+            if (prefilteredDocuments.Count == 0)
+            {
+                return (new(), 0);
+            }
+
             // Get TF-IDF vector for all documents and calculate cosine similarity to query vector
             Dictionary<int, double> DocIdSimilarityDictionary = new();
             foreach (var docId in prefilteredDocuments)
