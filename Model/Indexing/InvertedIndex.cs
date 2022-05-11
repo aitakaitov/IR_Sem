@@ -18,7 +18,7 @@ namespace Model.Indexing
         public bool Indexed { get; private set; } = false;
 
         /** Preprocessing */
-        private Analyzer Analyzer;
+        private IAnalyzer Analyzer;
 
         /** Not used right now */
         private IndexConfig Config;
@@ -36,11 +36,14 @@ namespace Model.Indexing
         /** Term Id - Term mapping */
         private Dictionary<int, string> IdTermDictionary = new();
 
+        public string Name { get; private set; }
 
-        public InvertedIndex(Analyzer analyzer, IndexConfig indexConfig)
+
+        public InvertedIndex(IAnalyzer analyzer, IndexConfig indexConfig, string name)
         {
             this.Analyzer = analyzer;
             this.Config = indexConfig;
+            this.Name = name;
         }
 
         public void Index(List<IDocument> documents)
@@ -361,6 +364,11 @@ namespace Model.Indexing
                 Console.WriteLine(output);
             }
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
 
@@ -391,5 +399,4 @@ namespace Model.Indexing
     }
 
     internal record Posting(string Term, int DocumentId);
-
 }
