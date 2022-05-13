@@ -26,6 +26,6 @@ namespace Model.Indexing
         /// </summary>
         /// <param name="query"></param>
         /// <returns>(top K IDocs, total count of relevant)</returns>
-        public (List<IDocument>, int) VectorSpaceSearch(BasicQuery query);
+        public (List<IDocument>, int, List<float>) VectorSpaceSearch(BasicQuery query);
     }
 }

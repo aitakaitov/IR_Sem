@@ -14,7 +14,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Label VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="The indexing is underway and might take a while. Please wait until this window closes." TextWrapping="WrapWithOverflow"/>
+            <TextBlock x:Name="MessageTextBlock" Text="The indexing is underway and might take a while. Please wait until this window closes." TextWrapping="WrapWithOverflow"/>
         </Label>
     </Grid>
 </Window>

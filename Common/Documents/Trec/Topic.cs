@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 
 namespace Common.Documents.Trec
 {
-    public class Topic
+    public class Topic : IDocument
     {
-        string Id { get; set; }
-        string Narrative { get; set; }
-        string Description { get; set; }
-        string Title { get; set; }
-        string Lang { get; set; }
+        public string Id { get; set; }
+        public string Narrative { get; set; }
+        public string Description { get; set; }
+        public string Title { get; set; }
+        public string Lang { get; set; }
+
+        public string GetRelevantText()
+        {
+            return Narrative + " " + Title;
+        }
     }
 }

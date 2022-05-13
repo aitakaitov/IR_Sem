@@ -152,6 +152,32 @@ namespace IR_Sem
             documentPreview.Title = "Document Preview";
             documentPreview.Show();
         }
+
+        private void TrecButton_Click(object sender, RoutedEventArgs e)
+        {
+            TrecDialogWindow dialog = new();
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            var directory = dialog.SelectedDirectory;
+
+            var loadingDialog = new LoadingDialog();
+            loadingDialog.Title = "TREC Eval";
+            loadingDialog.MessageTextBlock.Text = "TREC Evaluation is in progress and will take a while.";
+            loadingDialog.Show();
+            try
+            {
+                Controller.RunEval(directory);
+            }
+            catch (Exception ex)
+            {
+                loadingDialog.Close();
+                MessageBox.Show(ex.Message);
+                return;
+            }
+        }
     }
 }
 

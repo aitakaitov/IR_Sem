@@ -27,6 +27,8 @@ namespace Model.Indexing
         private List<IDocument> Documents = new();
         private List<int> DocumentIDs = new();
 
+        private List<List<float>> DocumentVectors = new();
+
         /** Inverted index */
         private Dictionary<int, InvertedIndexValue> DocumentIndex = new();
 
@@ -75,7 +77,20 @@ namespace Model.Indexing
 
             // Turn postings into inverted index
             CreateInvertedIndex(postings);
+
+            // Calculate all document vectors
+            CalculateDocumentVectors();
+
             Indexed = true;
+        }
+
+        private void CalculateDocumentVectors()
+        {
+            for (int i = 0; i < DocumentIDs.Count; i++)
+            {
+                float[] documentVector = GetDocumentVector(DocumentIDs[i]);
+                DocumentVectors.Add(documentVector.ToList());
+            }
         }
 
         private void CreateInvertedIndex(List<Posting> postings)
@@ -229,31 +244,38 @@ namespace Model.Indexing
         /// </summary>
         /// <param name="query"></param>
         /// <returns>tuple of (top K IDocs, count)</returns>
-        public (List<IDocument>, int) VectorSpaceSearch(BasicQuery query)
+        public (List<IDocument>, int, List<float>) VectorSpaceSearch(BasicQuery query)
         {
             // Get TF-IDF vector for query
             var queryVector = GetQueryVector(query);
+
+            if (queryVector == null)
+            {
+                return (new(), 0, new());
+            }
+
             // Pre-compute vector norm
-            double queryVectorNorm = CalculateVectorNorm(queryVector);
+            var queryVectorNorm = CalculateVectorNorm(queryVector);
             // Narrow the documents with boolean search
             var prefilteredDocuments = BooleanSearchIds(query.QueryText);
 
             if (prefilteredDocuments.Count == 0)
             {
-                return (new(), 0);
+                return (new(), 0, new());
             }
 
             // Get TF-IDF vector for all documents and calculate cosine similarity to query vector
             Dictionary<int, double> DocIdSimilarityDictionary = new();
             foreach (var docId in prefilteredDocuments)
             {
-                var documentVector = GetDocumentVector(docId);
-                var cosineSimilarity = CalculateCosineSimilarity(documentVector, queryVector, queryVectorNorm);
+                var documentVector = DocumentVectors.ElementAt(docId); //GetDocumentVector(docId);
+                var cosineSimilarity = CalculateCosineSimilarity(documentVector.ToArray(), queryVector, queryVectorNorm);
                 DocIdSimilarityDictionary.Add(docId, cosineSimilarity);
             }
 
             // Get top K results
             List<IDocument> results = new();
+            List<float> scores = new();
             int count = 0;
             foreach (var doc in DocIdSimilarityDictionary.OrderByDescending(key => key.Value))
             {
@@ -262,34 +284,34 @@ namespace Model.Indexing
                     break;
                 }
                 results.Add(Documents[doc.Key]);
-                Debug.Print($"Result {count + 1} cosine: {doc.Value}");
+                scores.Add((float)DocIdSimilarityDictionary[doc.Key]);
                 count++;
             }
 
-            return (results, DocIdSimilarityDictionary.Where((id, cos) => cos != 0).Count());
+            return (results, DocIdSimilarityDictionary.Where((id, cos) => cos != 0).Count(), scores);
         }
 
-        private double CalculateCosineSimilarity(double[] documentVector, double[] queryVector, double queryVectorNorm)
+        private float CalculateCosineSimilarity(float[] documentVector, float[] queryVector, float queryVectorNorm)
         {
             return CalculateDotProduct(documentVector, queryVector) / (CalculateVectorNorm(documentVector) * queryVectorNorm);
         }
 
-        private double CalculateDotProduct(double[] v1, double[] v2)
+        private float CalculateDotProduct(float[] v1, float[] v2)
         {
             return v1.Zip(v2, (d1, d2) => d1 * d2).Sum();
         }
 
-        private double CalculateVectorNorm(double[] vector)
+        private float CalculateVectorNorm(float[] vector)
         {
-            double norm = Math.Sqrt(
+            float norm = (float)Math.Sqrt(
                 CalculateDotProduct(vector, vector)
             );
             return norm;
         }
 
-        private double[] GetDocumentVector(int docId)
+        private float[] GetDocumentVector(int docId)
         {
-            var vector = new double[TermIdDictionary.Count];
+            var vector = new float[TermIdDictionary.Count];
             // Initialize to 0, since if TF == 0, TF-IDF == 0
             for (int i = 0; i < vector.Length; i++)
             {
@@ -309,7 +331,7 @@ namespace Model.Indexing
             return vector;
         }
 
-        private double[] GetQueryVector(BasicQuery query)
+        private float[] GetQueryVector(BasicQuery query)
         {
             // Preprocess the query
             List<string> queryTokens = Analyzer.Preprocess(new Document() { Text = query.QueryText });
@@ -323,8 +345,13 @@ namespace Model.Indexing
                 }
             }
 
+            if (tokenIds.Count == 0)
+            {
+                return null;
+            }
+
             // Create query vector, init to 0
-            var vector = new double[TermIdDictionary.Count];
+            var vector = new float[TermIdDictionary.Count];
             for (int i = 0; i < vector.Length; i++)
             {
                 vector[i] = 0;
@@ -348,11 +375,11 @@ namespace Model.Indexing
             return vector;
         }
 
-        private double CalculateTFIDF(int tf, int df)
+        private float CalculateTFIDF(int tf, int df)
         {
             if (tf == 0) { return 0; }
-            double termFreq = 1 + Math.Log10(tf);
-            double idf = Math.Log10(Documents.Count / (double)df);
+            float termFreq = (float)(1 + Math.Log10(tf));
+            float idf = (float)Math.Log10(Documents.Count / (float)df);
 
             return termFreq * idf;
         }

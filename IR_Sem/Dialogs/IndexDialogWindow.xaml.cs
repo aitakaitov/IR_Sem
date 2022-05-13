@@ -135,7 +135,7 @@ namespace View.Dialogs
 
             if (result.Value)
             {
-                DirectoryNameTextBox.Text = openFileDialog.FileName;
+                StopwordsTextBox.Text = openFileDialog.FileName;
             }
         }
 

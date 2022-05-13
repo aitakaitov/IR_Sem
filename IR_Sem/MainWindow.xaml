@@ -54,13 +54,13 @@
             </StackPanel>
 
             <Label Grid.Row="4" Content="Query:" Grid.ColumnSpan="3"/>
-            <TextBox x:Name="QueryBox" Grid.Row="5" TextWrapping="Wrap" Text="kalousek" Grid.ColumnSpan="2" />
-            <RadioButton x:Name="BooleanSelector" Grid.Row="7" Content="Boolean search" Grid.ColumnSpan="2"  />
-            <RadioButton x:Name="VectorSelector" Grid.Row="8" Content="TF-IDF search" IsChecked="True" Grid.ColumnSpan="2" />
+            <TextBox x:Name="QueryBox" Grid.Row="5" TextWrapping="Wrap" Text="kalousek" />
+            <RadioButton x:Name="BooleanSelector" Grid.Row="7" Content="Boolean search"  />
+            <RadioButton x:Name="VectorSelector" Grid.Row="8" Content="TF-IDF search" IsChecked="True" />
 
-            <Button Grid.Row="9" x:Name="SearchButton" Content="Search" Click="SearchButton_Click" Grid.ColumnSpan="2"  />
+            <Button Grid.Row="9" x:Name="SearchButton" Content="Search" Click="SearchButton_Click"  />
 
-            <Button Grid.Row="10" x:Name="TrecButton" Content="Run TREC Eval" Grid.ColumnSpan="2" Margin="0,407,0,0" Grid.RowSpan="2" />
+            <Button Grid.Row="11" x:Name="TrecButton" Content="Run TREC Eval" Click="TrecButton_Click" />
         </Grid>
 
 
