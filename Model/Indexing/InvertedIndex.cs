@@ -10,6 +10,7 @@ using Model.Queries;
 using Common.Documents.Basic;
 using System.IO;
 using Common.Utils;
+using System.Numerics;
 
 namespace Model.Indexing
 {
@@ -248,11 +249,15 @@ namespace Model.Indexing
         public (List<IDocument>, int, List<float>) VectorSpaceSearch(BasicQuery query)
         {
             // Get TF-IDF vector for query
-            var queryVector = GetQueryVector(query);
-
-            if (queryVector == null)
+            var res = GetQueryVector(query);
+            var queryVector = new Vector<float>();
+            if (res == null)
             {
                 return (new(), 0, new());
+            }
+            else
+            {
+                queryVector = res.Value;
             }
 
             // Pre-compute vector norm
@@ -270,7 +275,7 @@ namespace Model.Indexing
             foreach (var docId in prefilteredDocuments)
             {
                 var documentVector = GetDocumentVector(docId);
-                var cosineSimilarity = CalculateCosineSimilarity(documentVector.ToArray(), queryVector, queryVectorNorm);
+                var cosineSimilarity = CalculateCosineSimilarity(documentVector, queryVector, queryVectorNorm);
                 DocIdSimilarityDictionary.Add(docId, cosineSimilarity);
             }
 
@@ -292,30 +297,20 @@ namespace Model.Indexing
             return (results, DocIdSimilarityDictionary.Where((id, cos) => cos != 0).Count(), scores);
         }
 
-        private float CalculateCosineSimilarity(float[] documentVector, float[] queryVector, float queryVectorNorm)
+        private float CalculateCosineSimilarity(Vector<float> documentVector, Vector<float> queryVector, float queryVectorNorm)
         {
-            return CalculateDotProduct(documentVector, queryVector) / (CalculateVectorNorm(documentVector) * queryVectorNorm);
+            return Vector.Dot(documentVector, queryVector) / (CalculateVectorNorm(documentVector) * queryVectorNorm);
         }
 
-        private float CalculateDotProduct(float[] v1, float[] v2)
-        {
-            float res = 0;
-            for (int i = 0; i < v1.Length; i++)
-            {
-                res += v1[i] * v2[i];
-            }
-            return res;
-        }
-
-        private float CalculateVectorNorm(float[] vector)
+        private float CalculateVectorNorm(Vector<float> vector)
         {
             float norm = (float)Math.Sqrt(
-                CalculateDotProduct(vector, vector)
+                Vector.Dot(vector, vector)
             );
             return norm;
         }
 
-        private float[] GetDocumentVector(int docId)
+        private Vector<float> GetDocumentVector(int docId)
         {
             // Default value for float is 0.0f and value-type arrays are always initialized to the default value
             var vector = new float[TermIdMap.Count];
@@ -330,10 +325,10 @@ namespace Model.Indexing
                 //}
             }
 
-            return vector;
+            return new Vector<float>(vector);
         }
 
-        private float[] GetQueryVector(BasicQuery query)
+        private Vector<float>? GetQueryVector(BasicQuery query)
         {
             // Preprocess the query
             List<string> queryTokens = Analyzer.Preprocess(new Document() { Text = query.QueryText });
@@ -374,7 +369,7 @@ namespace Model.Indexing
                 }
             }
 
-            return vector;
+            return new Vector<float>(vector);
         }
 
         private float CalculateTFIDF(int tf, int df)
