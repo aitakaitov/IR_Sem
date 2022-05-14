@@ -105,14 +105,28 @@ namespace Model.Indexing
 
                 DocumentValue val = new DocumentValue() { DocumentId = posting.DocumentId, TermFrequency = 1 };
                 // Check if the document already contains this term - if yes, increase the term frequency
-                if (DocumentIndex[termId].Documents.ContainsValue(val))
+                if (DocumentIndex[termId].Documents.Contains(val))
                 {
-                    DocumentIndex[termId].Documents[posting.DocumentId].TermFrequency++;
+                    try
+                    {
+                        var docList = DocumentIndex[termId].Documents;
+                        docList.Single(d => d.DocumentId == val.DocumentId).TermFrequency++;
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine();
+                    }
+
                 }
                 else    // Otherwise just add the document to the term
                 {
-                    DocumentIndex[termId].Documents.Add(posting.DocumentId, val);
+                    DocumentIndex[termId].Documents.Add(val);
                 }
+            }
+
+            foreach (var docList in DocumentIndex.Values)
+            {
+                docList.Documents = docList.Documents.OrderBy(dv => dv.DocumentId).ToList();
             }
 
             CalculateDFValues();
@@ -232,7 +246,7 @@ namespace Model.Indexing
                     List<int> ids = new();
                     foreach (var documentValue in DocumentIndex[TermIdDictionary[processedTerm]].Documents)
                     {
-                        ids.Add(documentValue.Key);
+                        ids.Add(documentValue.DocumentId);
                     }
                     return ids;
                 }
@@ -318,12 +332,15 @@ namespace Model.Indexing
                 vector[i] = 0;
             }
 
+            DocumentValue temp = new() { DocumentId = docId };
+
             // Replace 0 with TF-IDF values for each term present in the document
             foreach (var termId in DocumentIndex.Keys)
             {
-                if (DocumentIndex[termId].Documents.Keys.Contains(docId))
+                var index = DocumentIndex[termId].Documents.BinarySearch(temp);
+                if (index >= 0)
                 {
-                    vector[termId] = DocumentIndex[termId].Documents[docId].TermFrequency;
+                    vector[termId] = DocumentIndex[termId].Documents[index].TermFrequency;
                     vector[termId] = CalculateTFIDF((int)vector[termId], DocumentIndex[termId].DocumentFrequency);
                 }
             }
@@ -384,25 +401,6 @@ namespace Model.Indexing
             return termFreq * idf;
         }
 
-
-
-
-        /** DEBUG */
-        public void PrintIndex()
-        {
-            foreach (var key in DocumentIndex.Keys)
-            {
-                var value = DocumentIndex[key];
-                var term = IdTermDictionary[key];
-                string output = term.ToString() + $"\tDF:{value.DocumentFrequency} -";
-                foreach (var val in value.Documents)
-                {
-                    output += $" (DocId: {val.Value.DocumentId}, TermFreq: {val.Value.TermFrequency}),";
-                }
-                Console.WriteLine(output);
-            }
-        }
-
         public override string ToString()
         {
             return Name;
@@ -413,14 +411,19 @@ namespace Model.Indexing
 
     internal class InvertedIndexValue
     {
-        public SortedList<int, DocumentValue> Documents { get; set; } = new();
+        public List<DocumentValue> Documents { get; set; } = new();
         public int DocumentFrequency = 0;
     }
 
-    internal class DocumentValue : IEquatable<DocumentValue>
+    internal class DocumentValue : IEquatable<DocumentValue>, IComparable<DocumentValue>
     {
         public int DocumentId;
         public int TermFrequency;
+
+        public int CompareTo(DocumentValue? other)
+        {
+            return DocumentId - other.DocumentId;
+        }
 
         // To make adding them to SortedList easier during the construction of the inverted index
         public bool Equals(DocumentValue? other)
