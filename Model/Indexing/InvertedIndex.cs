@@ -27,16 +27,16 @@ namespace Model.Indexing
         private List<IDocument> Documents = new();
         private List<int> DocumentIDs = new();
 
-        private List<List<float>> DocumentVectors = new();
+        private List<int>[] DocumentTermList;
 
         /** Inverted index */
-        private Dictionary<int, InvertedIndexValue> DocumentIndex = new();
+        private InvertedIndexValue[] DocumentIndex;
 
         /** Term - Term Id mapping */
-        private Dictionary<string, int> TermIdDictionary = new();
+        private Dictionary<string, int> TermIdMap = new();
 
         /** Term Id - Term mapping */
-        private Dictionary<int, string> IdTermDictionary = new();
+        private string[] IdTermMap;
 
         public string Name { get; private set; }
 
@@ -69,64 +69,51 @@ namespace Model.Indexing
 
             // Generate dictionary
             var uniqueTerms = GetUniqueTerms(postings);
+            DocumentIndex = new InvertedIndexValue[uniqueTerms.Count];
+            IdTermMap = new string[uniqueTerms.Count];
+            DocumentTermList = new List<int>[uniqueTerms.Count];
             for (int i = 0; i < uniqueTerms.Count; i++)
             {
-                TermIdDictionary[uniqueTerms[i]] = i;
-                IdTermDictionary[i] = uniqueTerms[i];
+                TermIdMap[uniqueTerms[i]] = i;
+                IdTermMap[i] = uniqueTerms[i];
+                DocumentTermList[i] = new();
             }
 
             // Turn postings into inverted index
             CreateInvertedIndex(postings);
 
-            // Calculate all document vectors
-            CalculateDocumentVectors();
-
             Indexed = true;
-        }
-
-        private void CalculateDocumentVectors()
-        {
-            for (int i = 0; i < DocumentIDs.Count; i++)
-            {
-                float[] documentVector = GetDocumentVector(DocumentIDs[i]);
-                DocumentVectors.Add(documentVector.ToList());
-            }
         }
 
         private void CreateInvertedIndex(List<Posting> postings)
         {
             foreach (Posting posting in postings)
             {
-                var termId = TermIdDictionary[posting.Term];
-                if (!DocumentIndex.ContainsKey(termId))
+                var termId = TermIdMap[posting.Term];
+
+                // Document-term mapping
+                if (!DocumentTermList[posting.DocumentId].Contains(termId))
+                {
+                    DocumentTermList[posting.DocumentId].Add(termId);
+                }
+
+                // Inverted Index
+                if (DocumentIndex[termId] == null)
                 {
                     DocumentIndex[termId] = new InvertedIndexValue();
                 }
 
-                DocumentValue val = new DocumentValue() { DocumentId = posting.DocumentId, TermFrequency = 1 };
+                //DocumentValue val = new DocumentValue() { DocumentId = posting.DocumentId, TermFrequency = 1 };
                 // Check if the document already contains this term - if yes, increase the term frequency
-                if (DocumentIndex[termId].Documents.Contains(val))
+                if (DocumentIndex[termId].Documents.Keys.Contains(posting.DocumentId))
                 {
-                    try
-                    {
-                        var docList = DocumentIndex[termId].Documents;
-                        docList.Single(d => d.DocumentId == val.DocumentId).TermFrequency++;
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine();
-                    }
-
+                    var docDict = DocumentIndex[termId].Documents;
+                    docDict[posting.DocumentId].TermFrequency++;
                 }
                 else    // Otherwise just add the document to the term
                 {
-                    DocumentIndex[termId].Documents.Add(val);
+                    DocumentIndex[termId].Documents.Add(posting.DocumentId, new() { DocumentId = posting.DocumentId, TermFrequency = 1 });
                 }
-            }
-
-            foreach (var docList in DocumentIndex.Values)
-            {
-                docList.Documents = docList.Documents.OrderBy(dv => dv.DocumentId).ToList();
             }
 
             CalculateDFValues();
@@ -134,7 +121,7 @@ namespace Model.Indexing
 
         private void CalculateDFValues()
         {
-            foreach (var invertedIndexValue in DocumentIndex.Values)
+            foreach (var invertedIndexValue in DocumentIndex)
             {
                 invertedIndexValue.DocumentFrequency = invertedIndexValue.Documents.Count;
             }
@@ -237,16 +224,16 @@ namespace Model.Indexing
             else
             {
                 var processedTerm = res[0];
-                if (!TermIdDictionary.Keys.Contains(processedTerm))
+                if (!TermIdMap.Keys.Contains(processedTerm))
                 {
                     return null;
                 }
                 else
                 {
                     List<int> ids = new();
-                    foreach (var documentValue in DocumentIndex[TermIdDictionary[processedTerm]].Documents)
+                    foreach (var documentValue in DocumentIndex[TermIdMap[processedTerm]].Documents)
                     {
-                        ids.Add(documentValue.DocumentId);
+                        ids.Add(documentValue.Key);
                     }
                     return ids;
                 }
@@ -282,7 +269,7 @@ namespace Model.Indexing
             Dictionary<int, double> DocIdSimilarityDictionary = new();
             foreach (var docId in prefilteredDocuments)
             {
-                var documentVector = DocumentVectors.ElementAt(docId); //GetDocumentVector(docId);
+                var documentVector = GetDocumentVector(docId);
                 var cosineSimilarity = CalculateCosineSimilarity(documentVector.ToArray(), queryVector, queryVectorNorm);
                 DocIdSimilarityDictionary.Add(docId, cosineSimilarity);
             }
@@ -312,7 +299,12 @@ namespace Model.Indexing
 
         private float CalculateDotProduct(float[] v1, float[] v2)
         {
-            return v1.Zip(v2, (d1, d2) => d1 * d2).Sum();
+            float res = 0;
+            for (int i = 0; i < v1.Length; i++)
+            {
+                res += v1[i] * v2[i];
+            }
+            return res;
         }
 
         private float CalculateVectorNorm(float[] vector)
@@ -325,24 +317,17 @@ namespace Model.Indexing
 
         private float[] GetDocumentVector(int docId)
         {
-            var vector = new float[TermIdDictionary.Count];
-            // Initialize to 0, since if TF == 0, TF-IDF == 0
-            for (int i = 0; i < vector.Length; i++)
-            {
-                vector[i] = 0;
-            }
-
-            DocumentValue temp = new() { DocumentId = docId };
+            // Default value for float is 0.0f and value-type arrays are always initialized to the default value
+            var vector = new float[TermIdMap.Count];
 
             // Replace 0 with TF-IDF values for each term present in the document
-            foreach (var termId in DocumentIndex.Keys)
+            foreach (var termId in DocumentTermList[docId])
             {
-                var index = DocumentIndex[termId].Documents.BinarySearch(temp);
-                if (index >= 0)
-                {
-                    vector[termId] = DocumentIndex[termId].Documents[index].TermFrequency;
-                    vector[termId] = CalculateTFIDF((int)vector[termId], DocumentIndex[termId].DocumentFrequency);
-                }
+                //if (DocumentIndex[termId].Documents.ContainsKey(docId))
+                //{
+                vector[termId] = DocumentIndex[termId].Documents[docId].TermFrequency;
+                vector[termId] = CalculateTFIDF((int)vector[termId], DocumentIndex[termId].DocumentFrequency);
+                //}
             }
 
             return vector;
@@ -356,9 +341,9 @@ namespace Model.Indexing
             // Turn tokens into term-ids
             foreach (var token in queryTokens)
             {
-                if (TermIdDictionary.ContainsKey(token))
+                if (TermIdMap.ContainsKey(token))
                 {
-                    tokenIds.Add(TermIdDictionary[token]);
+                    tokenIds.Add(TermIdMap[token]);
                 }
             }
 
@@ -368,7 +353,7 @@ namespace Model.Indexing
             }
 
             // Create query vector, init to 0
-            var vector = new float[TermIdDictionary.Count];
+            var vector = new float[TermIdMap.Count];
             for (int i = 0; i < vector.Length; i++)
             {
                 vector[i] = 0;
@@ -411,7 +396,7 @@ namespace Model.Indexing
 
     internal class InvertedIndexValue
     {
-        public List<DocumentValue> Documents { get; set; } = new();
+        public Dictionary<int, DocumentValue> Documents { get; set; } = new();
         public int DocumentFrequency = 0;
     }
 

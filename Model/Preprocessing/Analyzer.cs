@@ -48,6 +48,7 @@ namespace Model.Preprocessing
             }
             if (Config.RemoveAccents)
             {
+                // Accent removal takes some time -- optimize?
                 text = Accents.RemoveAccents(text);
             }
 
