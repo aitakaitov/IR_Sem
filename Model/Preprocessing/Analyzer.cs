@@ -15,9 +15,15 @@ namespace Model.Preprocessing
         private AnalyzerConfig Config { get; set; }
         private IStopwords Stopwords { get; set; }
 
-        public Analyzer(ITokenizer tokenizer, IStemmer stemmer, IStopwords stopwords, AnalyzerConfig config)
+        public Analyzer(ITokenizer tokenizer, IStemmer? stemmer, IStopwords stopwords, AnalyzerConfig config)
         {
             Tokenizer = tokenizer;
+
+            if (stemmer == null && config.PerformStemming)
+            {
+                throw new InvalidOperationException("Configuration.PerformStemming is set to true but no stemmer was passed");
+            }
+
             Stemmer = stemmer;
             Config = config;
             if (stopwords == null)
@@ -62,6 +68,16 @@ namespace Model.Preprocessing
             tokens = Stopwords.RemoveStopwords(tokens);
 
             return tokens;
+        }
+
+        /// <summary>
+        /// Passtrough to allow tokenizing without direct access to Tokenizer
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public List<string> Tokenize(string s)
+        {
+            return Tokenizer.Tokenize(s);
         }
 
         private string Lowercase(string text)

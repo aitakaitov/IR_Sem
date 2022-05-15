@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Model.Indexing
 {
+    /// <summary>
+    /// Generic index interface
+    /// </summary>
     public interface IIndex
     {
         /// <summary>

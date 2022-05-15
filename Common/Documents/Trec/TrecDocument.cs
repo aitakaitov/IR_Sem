@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace Common.Documents.Trec
 {
+#nullable disable
+    /// <summary>
+    /// TREC evaluation document
+    /// For JSON parsing
+    /// </summary>
     public class TrecDocument : IDocument
     {
         public string Title { get; set; }

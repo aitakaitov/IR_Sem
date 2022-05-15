@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace Model.Preprocessing
 {
     /// <summary>
-    /// Taken from https://stackoverflow.com/questions/249087/how-do-i-remove-diacritics-accents-from-a-string-in-net
-    /// and slightly modified
+    /// Inspired by https://stackoverflow.com/questions/249087/how-do-i-remove-diacritics-accents-from-a-string-in-net
+    /// and significantly sped up
     /// </summary>
     public static class Accents
     {
@@ -19,6 +19,11 @@ namespace Model.Preprocessing
             "IIIIIIIIIIIIIIIIIIIiiiiiiiiiiiiiiiiiiiiJjKKKkkkLLLLLLLlllllllMmNNNNNNnnnnnnnOOOOOOOOOOOOOOOOOOOOOOOOOOOOoooooooooooooooooooooooooooooPpRRRRRrrrrrSSSSSSSsssssssssTTTTTTttttt" +
             "UUUUUUUUUUUUUUUUUUUUUUUUuuuuuuuuuuuuuuuuuuuuuuuuuuYYYYYYYYYYYyyyyyyyyWwZZZZZzzzzzfpvm";
 
+        /// <summary>
+        /// Removes accents from a string
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public static string RemoveAccents(string s)
         {
             StringBuilder text = new();

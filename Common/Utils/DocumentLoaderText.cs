@@ -11,6 +11,11 @@ namespace Common.Utils
 {
     public class DocumentLoaderText
     {
+        /// <summary>
+        /// Given a directory, loads all the text files into Documents
+        /// </summary>
+        /// <param name="directoryPath">directory</param>
+        /// <returns>List of Documents</returns>
         public static List<IDocument> Load(string directoryPath)
         {
             List<IDocument> documents = new();

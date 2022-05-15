@@ -67,7 +67,6 @@ namespace Model.Preprocessing
             StopwordsList = lines.ToList();
         }
 
-        /** For debug and testing only - TODO fix for release */
         public void UseDefaults()
         {
             StopwordsList = new();

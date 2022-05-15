@@ -1,16 +1,18 @@
 ﻿
 namespace Common.Documents.Idnes
 {
-    /** IDnes article comment - for JSON parsing */
+    /// <summary>
+    /// IDnes article comment for JSON parsing purposes
+    /// </summary>
     public class Comment : IDocument
     {
         public Comment(string text, string timestamp, string author, int positive, int negative)
         {
-            this.Text = text;
-            this.TimeStamp = timestamp;
-            this.Author = author;
-            this.PositiveReactions = positive;
-            this.NegativeReactions = negative;
+            Text = text;
+            TimeStamp = timestamp;
+            Author = author;
+            PositiveReactions = positive;
+            NegativeReactions = negative;
         }
 
         public string Text { get; set; }

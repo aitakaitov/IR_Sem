@@ -21,6 +21,9 @@ namespace View.Dialogs
     /// </summary>
     public partial class TrecDialogWindow : Window
     {
+        /// <summary>
+        /// Selected directory
+        /// </summary>
         public string SelectedDirectory
         {
             get
@@ -34,6 +37,11 @@ namespace View.Dialogs
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Effectively OKButton clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void EvalButton_Click(object sender, RoutedEventArgs e)
         {
             if (DirectoryNameTextBox.Text == "" || DirectoryNameTextBox.Text == null)
@@ -51,6 +59,10 @@ namespace View.Dialogs
             DialogResult = true;
         }
 
+        /// <summary>
+        /// Check if the directory exists and contains directories "topics" and "documents"
+        /// </summary>
+        /// <returns></returns>
         private bool DirectoryPathValid()
         {
             if (!Directory.Exists(SelectedDirectory))

@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace Model.Indexing
 {
+    /// <summary>
+    /// Currently unused
+    /// </summary>
     public class IndexConfig
     {
-        /** Not used right now */
         public bool BertSimilarity { get; set; } = false;
     }
 }

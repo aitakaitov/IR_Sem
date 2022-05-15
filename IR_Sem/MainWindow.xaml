@@ -14,9 +14,7 @@
 
         <Grid Grid.Column="0" Margin="5">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="242*"/>
-                <ColumnDefinition Width="41*"/>
-                <ColumnDefinition Width="7*"/>
+                <ColumnDefinition Width="290"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="25" />
@@ -39,10 +37,12 @@
                 <!-- 8 -->
                 <RowDefinition Height="30" />
                 <!-- 9 -->
-                <RowDefinition />
-                <!-- 10 -->
                 <RowDefinition Height="30" />
+                <!-- 10 -->
+                <RowDefinition />
                 <!-- 11 -->
+                <RowDefinition Height="30" />
+                <!-- 12 -->
             </Grid.RowDefinitions>
 
             <Label Grid.Row="0" Content="Index:" Grid.ColumnSpan="2" />
@@ -58,9 +58,12 @@
             <RadioButton x:Name="BooleanSelector" Grid.Row="7" Content="Boolean search"  />
             <RadioButton x:Name="VectorSelector" Grid.Row="8" Content="TF-IDF search" IsChecked="True" />
 
-            <Button Grid.Row="9" x:Name="SearchButton" Content="Search" Click="SearchButton_Click"  />
-
-            <Button Grid.Row="11" x:Name="TrecButton" Content="Run TREC Eval" Click="TrecButton_Click" />
+            <Button Grid.Row="9" x:Name="SearchButton" Content="Search" Click="SearchButton_Click" />
+            <StackPanel Orientation="Horizontal" Grid.Row="10">
+                <Label Content="Total hits: " VerticalAlignment="Center" HorizontalAlignment="Center" />
+                <TextBlock x:Name="TotalHitsBlock" Text="{Binding Controller.TotalHits}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+            </StackPanel>
+            <Button Grid.Row="12" x:Name="TrecButton" Content="Run TREC Eval" Click="TrecButton_Click" />
         </Grid>
 
 

@@ -15,13 +15,37 @@ using System.Threading.Tasks;
 
 namespace Controller
 {
+    /// <summary>
+    /// Controller which serves as an interface between frontend and core functionality
+    /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class Controller
     {
+        /// <summary>
+        /// Currently selected index
+        /// </summary>
         public IIndex SelectedIndex { get; set; }
+
+        /// <summary>
+        /// All available indexes
+        /// </summary>
         public ObservableCollection<IIndex> AvailableIndexes { get; set; } = new();
+
+        /// <summary>
+        /// Currently displayed relevant documents
+        /// </summary>
         public ObservableCollection<string> RelevantDocuments { get; set; } = new();
 
+        /// <summary>
+        /// Total number of hits from last query
+        /// </summary>
+        public int TotalHits { get; set; } = 0;
+
+        /// <summary>
+        /// Creates a new index and adds it to AvailableIndexes
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>the new index</returns>
         public IIndex CreateIndex(CreateIndexRequest request)
         {
             AnalyzerConfig config = new()
@@ -31,8 +55,8 @@ namespace Controller
                 RemoveAccents = request.RemoveAccents
             };
 
-            IStopwords stopwords = VerifyAndLoadStopwords(request.StopwordsFilePath);
-            IStemmer stemmer = null;
+            IStopwords stopwords = VerifyAndLoadStopwords(request.StopwordsFilePath, config);
+            IStemmer? stemmer = null;
             if (config.PerformStemming)
             {
                 stemmer = new Stemmer();
@@ -50,9 +74,15 @@ namespace Controller
             return index;
         }
 
-        private IStopwords VerifyAndLoadStopwords(string? filePath)
+        /// <summary>
+        /// Checks if the path to the stopwords file exists and if it does, it loads and returns the stopwords
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns>stopwords</returns>
+        private IStopwords VerifyAndLoadStopwords(string? filePath, AnalyzerConfig config)
         {
             Stopwords stopwords = new();
+            stopwords.SetConfig(config);
             if (filePath == null)
             {
                 // Return empty
@@ -68,30 +98,46 @@ namespace Controller
             AvailableIndexes.Remove(index);
         }
 
+        /// <summary>
+        /// Performs a boolean query over the SelectedIndex
+        /// Results are saved in RelevantDocuments
+        /// </summary>
+        /// <param name="queryText"></param>
         public void MakeBooleanQuery(string queryText)
         {
             var documents = SelectedIndex.BooleanSearch(new()
             {
                 QueryText = queryText,
-                TopCount = 10000000
+                TopCount = 100
             });
 
             RelevantDocuments.Clear();
             documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
+            TotalHits = documents.Item2;
         }
 
+        /// <summary>
+        /// Performs a vector-space query over the SelectedIndex
+        /// Results are saved in RelevantDocuments
+        /// </summary>
+        /// <param name="queryText"></param>
         public void MakeVectorQuery(string queryText)
         {
             var documents = SelectedIndex.VectorSpaceSearch(new()
             {
                 QueryText = queryText,
-                TopCount = 10000000
+                TopCount = 100
             });
 
             RelevantDocuments.Clear();
             documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
+            TotalHits = documents.Item2;
         }
 
+        /// <summary>
+        /// Runs TREC evaluation given directory with documents and topics
+        /// </summary>
+        /// <param name="directory">trec dataset directory</param>
         public void RunEval(string directory)
         {
             var documents = DocumentLoaderJson.Load<TrecDocument>(directory + "/documents");
@@ -116,13 +162,14 @@ namespace Controller
             index.Index(documents);
 
             List<string> lines = new();
-            foreach (var q in queries)
+            for (int i = 0; i < queries.Count; i++)
             {
-                var query = q as Topic;
+
+                var query = queries[i] as Topic;
                 var result = index.VectorSpaceSearch(new()
                 {
                     QueryText = query.GetRelevantText(),
-                    TopCount = 10000000
+                    TopCount = 100
                 });
 
                 var relevantDocuments = result.Item1;
@@ -134,22 +181,17 @@ namespace Controller
                 }
                 else
                 {
-                    for (int i = 0; i < relevantDocuments.Count; i++)
+                    for (int j = 0; j < relevantDocuments.Count; j++)
                     {
-                        var doc = relevantDocuments[i] as TrecDocument;
-                        float score = scores[i];
-                        string line = query.Id + " Q0 " + doc.Id + " " + i + " " + score + " runindex1";
+                        var doc = relevantDocuments[j] as TrecDocument;
+                        float score = scores[j];
+                        string line = query.Id + " Q0 " + doc.Id + " " + j + " " + score + " runindex1";
                         lines.Add(line);
                     }
                 }
             }
 
-            string output = "";
-            foreach (var line in lines)
-            {
-                output += line + "\n";
-            }
-            File.WriteAllText(directory + "/results.txt", output);
+            File.WriteAllLines(directory + "/results.txt", lines);
         }
     }
 }

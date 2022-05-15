@@ -17,8 +17,19 @@ namespace Model.Preprocessing
             Lowercase = lowercase;
         }
 
+        /// <summary>
+        /// Whether to remove accents or not
+        /// </summary>
         public bool RemoveAccents { get; set; } = true;
+
+        /// <summary>
+        /// Whether or lowercase or not
+        /// </summary>
         public bool Lowercase { get; set; } = true;
+        
+        /// <summary>
+        /// Whether to perform stemming or not. Stemming works only for Czech
+        /// </summary>
         public bool PerformStemming { get; set; } = true;
     }
 }

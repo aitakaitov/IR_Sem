@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace Common.Documents.Trec
 {
+#nullable disable
+    /// <summary>
+    /// TREC evaluation topic
+    /// For JSON parsing
+    /// </summary>
     public class Topic : IDocument
     {
         public string Id { get; set; }
@@ -16,7 +21,7 @@ namespace Common.Documents.Trec
 
         public string GetRelevantText()
         {
-            return Narrative + " " + Title;
+            return Description;
         }
     }
 }

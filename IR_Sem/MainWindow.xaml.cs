@@ -23,6 +23,7 @@ using Model.Queries;
 using System.Collections.ObjectModel;
 using View.Dialogs;
 using View;
+using System.Threading;
 
 namespace IR_Sem
 {
@@ -48,7 +49,9 @@ namespace IR_Sem
             var result = indexDialog.GetResult();
 
             LoadingDialog loadingDialog = new LoadingDialog();
+            loadingDialog.Title = "Indexing";
             loadingDialog.Show();
+            SetControlsEnabled(false);
             try
             {
                 var newIndex = Controller.CreateIndex(new()
@@ -67,9 +70,17 @@ namespace IR_Sem
             {
                 loadingDialog.Close();
                 MessageBox.Show(ex.Message);
-                return;
             }
 
+            SetControlsEnabled(true);
+        }
+
+        private void SetControlsEnabled(bool enabled)
+        {
+            SearchButton.IsEnabled = enabled;
+            TrecButton.IsEnabled = enabled;
+            NewIndexButton.IsEnabled = enabled;
+            DeleteSelectedButton.IsEnabled = enabled;
         }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -165,18 +176,19 @@ namespace IR_Sem
 
             var loadingDialog = new LoadingDialog();
             loadingDialog.Title = "TREC Eval";
-            loadingDialog.MessageTextBlock.Text = "TREC Evaluation is in progress and will take a while.";
             loadingDialog.Show();
+            SetControlsEnabled(false);
             try
             {
                 Controller.RunEval(directory);
+                loadingDialog.Close();
             }
             catch (Exception ex)
             {
                 loadingDialog.Close();
                 MessageBox.Show(ex.Message);
-                return;
             }
+            SetControlsEnabled(true);
         }
     }
 }

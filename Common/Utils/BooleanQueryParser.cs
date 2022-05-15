@@ -8,9 +8,19 @@ using Lucene.Net.QueryParsers;
 
 namespace Common.Utils
 {
+    /// <summary>
+    /// Static methods for boolean query parsing
+    /// </summary>
     public class BooleanQueryParser
     {
-
+        /// <summary>
+        /// Parse boolean query
+        /// allower operators: AND, OR, NOT, (, )
+        /// operator priority: (, ), NOT, AND, OR
+        /// NOT ParserNode has only one child, which is always the LeftChild
+        /// </summary>
+        /// <param name="queryString">query to parse</param>
+        /// <returns>Binary expression tree</returns>
         public static ParserNode ParseQuery(string queryString)
         {
             var tokens = Tokenize(queryString);
@@ -19,6 +29,11 @@ namespace Common.Utils
             return tree;
         }
 
+        /// <summary>
+        /// Convert postfix notation to binary expression tree
+        /// </summary>
+        /// <param name="postfix">postfix token list</param>
+        /// <returns>binary expression tree</returns>
         private static ParserNode PostfixToTree(List<string> postfix)
         {
             Stack<ParserNode> stack = new();
@@ -52,6 +67,12 @@ namespace Common.Utils
             return stack.Pop();
         }
 
+        /// <summary>
+        /// Converts infix to postfix
+        /// </summary>
+        /// <param name="infix">infix list of tokens</param>
+        /// <returns>postfix list of tokens</returns>
+        /// <exception cref="InvalidOperationException"></exception>
         private static List<string> InfixToPostfix(List<string> infix)
         {
             List<string> result = new();
@@ -103,6 +124,11 @@ namespace Common.Utils
             return result;
         }
 
+        /// <summary>
+        /// Operator precedence
+        /// </summary>
+        /// <param name="op"></param>
+        /// <returns></returns>
         private static int Precedence(string op)
         {
             switch (op)
@@ -123,9 +149,11 @@ namespace Common.Utils
             return token == "AND" || token == "OR" || token == "NOT" || token == "(" || token == ")";
         }
 
-        /**
-         * Boolean query tokenizer - preprocessing for boolean expression tree construction
-         */
+        /// <summary>
+        /// Tokenizes the query into tokens and adds default operators
+        /// </summary>
+        /// <param name="queryString"></param>
+        /// <returns></returns>
         private static List<string> Tokenize(string queryString)
         {
             List<string> tokens = new List<string>();
@@ -137,6 +165,7 @@ namespace Common.Utils
                 switch (c)
                 {
                     case ' ':
+                        // On space
                         if (sb.Length > 0)
                         {
                             tokens.Add(sb.ToString());
@@ -253,6 +282,7 @@ namespace Common.Utils
                 tokens.Add(sb.ToString());
             }
 
+            // Add default operators
             List<string> final_tokens = new();
             for (int i = 0; i < tokens.Count; i++)
             {
@@ -261,8 +291,7 @@ namespace Common.Utils
                 {
                     break;
                 }
-                if (tokens[i + 1] != "AND" && tokens[i + 1] != "OR" && tokens[i + 1] != "NOT" && tokens[i + 1] != ")" && tokens[i + 1] != "(" &&
-                    tokens[i] != "AND" && tokens[i] != "OR" && tokens[i] != "NOT" && tokens[i] != ")" && tokens[i] != "(")
+                if (!IsNextTokenOperator(tokens, i) && !IsNextTokenOperator(tokens, i - 1))
                 {
                     final_tokens.Add("OR");
                 }
@@ -271,6 +300,17 @@ namespace Common.Utils
             return final_tokens;
         }
 
+        private static bool IsNextTokenOperator(List<string> tokens, int i)
+        {
+            return !(tokens[i + 1] != "AND" && tokens[i + 1] != "OR" && tokens[i + 1] != "NOT" && tokens[i + 1] != ")" && tokens[i + 1] != "(");
+        }
+
+        /// <summary>
+        /// Checks if the next character is parantheses or a space, marking an end of expression
+        /// </summary>
+        /// <param name="s">query</param>
+        /// <param name="i">char index</param>
+        /// <returns></returns>
         private static bool IsEndOfExpression(string s, int i)
         {
             if (i == s.Length - 1) return true;
