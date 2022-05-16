@@ -10,13 +10,6 @@ namespace Model.Preprocessing
 
     public class Tokenizer : ITokenizer
     {
-        private IStopwords Stopwords;
-
-        public Tokenizer(IStopwords stopwords)
-        {
-            Stopwords = stopwords;
-        }
-
         // https://gist.github.com/dperini/729294
         private const string UrlRegexString =
             // protocol identifier (optional)

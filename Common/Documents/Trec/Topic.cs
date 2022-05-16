@@ -21,7 +21,7 @@ namespace Common.Documents.Trec
 
         public string GetRelevantText()
         {
-            return Description;
+            return Title;
         }
     }
 }

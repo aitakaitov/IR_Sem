@@ -62,7 +62,7 @@ namespace Controller
                 stemmer = new Stemmer();
             }
 
-            ITokenizer tokenizer = new Tokenizer(stopwords);
+            ITokenizer tokenizer = new Tokenizer();
             IAnalyzer analyzer = new Analyzer(tokenizer, stemmer, stopwords, config);
 
             IIndex index = new InvertedIndex(analyzer, new(), request.Name);
@@ -151,11 +151,12 @@ namespace Controller
             };
 
             Stopwords stopwords = new Stopwords();
+            stopwords.SetConfig(config);
             stopwords.UseDefaults();
 
             IStemmer stemmer = new Stemmer();
 
-            ITokenizer tokenizer = new Tokenizer(stopwords);
+            ITokenizer tokenizer = new Tokenizer();
             IAnalyzer analyzer = new Analyzer(tokenizer, stemmer, stopwords, config);
             IIndex index = new InvertedIndex(analyzer, new(), "TREC");
 

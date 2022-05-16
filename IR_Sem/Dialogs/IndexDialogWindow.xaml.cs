@@ -11,6 +11,9 @@ namespace View.Dialogs
     /// </summary>
     public partial class IndexDialogWindow : Window
     {
+        /// <summary>
+        /// Selected directory with documents to index
+        /// </summary>
         public string SelectedDirectory
         {
             get
@@ -19,6 +22,9 @@ namespace View.Dialogs
             }
         }
 
+        /// <summary>
+        /// Optional selected file with stopwords
+        /// </summary>
         public string? SelectedFile
         {
             get
@@ -27,6 +33,9 @@ namespace View.Dialogs
             }
         }
 
+        /// <summary>
+        /// Name of the index
+        /// </summary>
         public string? IndexName
         {
             get
@@ -89,6 +98,10 @@ namespace View.Dialogs
             }
         }
 
+        /// <summary>
+        /// Checks of the directory exists and contains any files
+        /// </summary>
+        /// <returns></returns>
         private bool DirectoryPathValid()
         {
             if (!Directory.Exists(SelectedDirectory))
@@ -107,6 +120,10 @@ namespace View.Dialogs
             return true;
         }
 
+        /// <summary>
+        /// Checks if the stopwords file exists
+        /// </summary>
+        /// <returns></returns>
         private bool FilePathValid()
         {
             if (SelectedFile == null || SelectedFile == "")
@@ -139,6 +156,10 @@ namespace View.Dialogs
             }
         }
 
+        /// <summary>
+        /// Returns result of the dialog
+        /// </summary>
+        /// <returns></returns>
         public IndexCreationDialogResult GetResult()
         {
             // We know that the checkboxes have a value, because they are initialized to IsChecked=False in XAML
@@ -153,7 +174,7 @@ namespace View.Dialogs
             };
         }
 
-
+        
         public class IndexCreationDialogResult
         {
             public string SelectedDirectory { get; set; }

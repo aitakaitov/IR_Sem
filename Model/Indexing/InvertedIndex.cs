@@ -3,14 +3,9 @@ using Model.Preprocessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using Model.Queries;
 using Common.Documents.Basic;
-using System.IO;
 using Common.Utils;
-using System.Numerics;
 
 namespace Model.Indexing
 {
@@ -151,7 +146,7 @@ namespace Model.Indexing
                     var docDict = DocumentIndex[termId].Documents;
                     docDict[posting.DocumentId].TermFrequency++;
                 }
-                else    
+                else
                 {
                     var documentValue = new DocumentValue() { DocumentId = posting.DocumentId, TermFrequency = 1 };
 
@@ -197,6 +192,7 @@ namespace Model.Indexing
         {
             ParserNode parsedQuery = BooleanQueryParser.ParseQuery(query.QueryText);
             var documentIds = GetDocumentsForQuery(parsedQuery);
+            documentIds.Sort();
 
             if (documentIds.Count == 0)
             {
@@ -339,8 +335,8 @@ namespace Model.Indexing
             var queryVectorNorm = CalculateVectorNorm(queryVector);
 
             // Narrow the documents with boolean search
-            var prefilteredDocuments = BooleanSearchIds(PreprocessQueryForPrefiltering(query.QueryText, "AND"));
-            if (prefilteredDocuments.Count < 1)
+            var prefilteredDocuments = BooleanSearchIds(PreprocessQueryForPrefiltering(query.QueryText, "OR"));
+            if (prefilteredDocuments.Count < 5)
             {
                 prefilteredDocuments = BooleanSearchIds(PreprocessQueryForPrefiltering(query.QueryText, "OR"));
             }
@@ -390,16 +386,49 @@ namespace Model.Indexing
         private string PreprocessQueryForPrefiltering(string query, string op)
         {
             var tokens = Analyzer.Tokenize(query);
+
             string newQuery = "";
-            for (int i = 0; i < tokens.Count; i++)
+
+            if (tokens.Count < 5 && op == "AND")
             {
-                if (i != tokens.Count - 1)
+                for (int i = 0; i < tokens.Count; i++)
                 {
-                    newQuery += tokens[i] + " " + op + " ";
+                    if (i != tokens.Count - 1)
+                    {
+                        newQuery += tokens[i] + " " + op + " ";
+                    }
+                    else
+                    {
+                        newQuery += tokens[i];
+                    }
                 }
-                else
+            }
+            else if (tokens.Count > 6 && op == "OR")
+            {
+                for (int i = 0; i < tokens.Count; i++)
                 {
-                    newQuery += tokens[i];
+                    if (i < tokens.Count - 1)
+                    {
+                        newQuery += tokens[i] + " OR "; //(i % 2 == 0 ? "AND " : "OR ");
+                    }
+                    else
+                    {
+                        newQuery += tokens[i];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < tokens.Count; i++)
+                {
+                    if (i < tokens.Count - 1)
+                    {
+                        newQuery += tokens[i] + " " + op + " ";
+                    }
+                    else
+                    {
+                        newQuery += tokens[i];
+                    }
                 }
             }
 
@@ -447,7 +476,7 @@ namespace Model.Indexing
                 var documentValue = DocumentTermList[docId][i];
                 //if (DocumentIndex[termId].Documents.ContainsKey(docId))
                 //{
-                vector[termId] = CalculateTFIDF(documentValue.TermFrequency, DocumentIndex[termId].DocumentFrequency);
+                vector[termId] = CalculateTFIDFDocument(documentValue.TermFrequency, DocumentIndex[termId].DocumentFrequency);
                 //}
             }
 
@@ -492,20 +521,38 @@ namespace Model.Indexing
             {
                 if (vector[i] != 0)
                 {
-                    vector[i] = CalculateTFIDF((int)vector[i], DocumentIndex[i].DocumentFrequency);
+                    vector[i] = CalculateTFIDFQuery((int)vector[i], DocumentIndex[i].DocumentFrequency);
                 }
             }
 
             return vector;
         }
 
-        private float CalculateTFIDF(int tf, int df)
+        private float CalculateTFIDFQuery(int tf, int df)
         {
             if (tf == 0) { return 0; }
             float termFreq = (float)(1 + Math.Log10(tf));
             float idf = (float)Math.Log10(Documents.Count / (float)df);
 
             return termFreq * idf;
+        }
+        private float CalculateTFIDFDocument(int tf, int df)
+        {
+            if (tf == 0) { return 0; }
+            float termFreq = (float)(1 + Math.Log10(tf));
+            float idf = (float)Math.Log10(Documents.Count / (float)df);
+
+            return termFreq * idf;
+        }
+
+        private float[] NormalizeVector(float[] v)
+        {
+            float norm = v.Length;
+            for (int i = 0; i < v.Length; i++)
+            {
+                v[i] /= norm;
+            }
+            return v;
         }
 
         public override string ToString()

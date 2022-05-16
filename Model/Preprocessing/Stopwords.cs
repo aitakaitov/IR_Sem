@@ -103,7 +103,7 @@ namespace Model.Preprocessing
         // https://raw.githubusercontent.com/stopwords-iso/stopwords-cs/master/raw/stop-words-czech2.txt
         private List<string> DefaultStopWords = new()
         {
-            "﻿a",
+            "a",
             "aby",
             "aj",
             "ale",
