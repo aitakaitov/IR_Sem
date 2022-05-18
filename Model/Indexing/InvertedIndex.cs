@@ -289,7 +289,7 @@ namespace Model.Indexing
             var res = Analyzer.Preprocess(new Document() { Text = unprocessedTerm });
             if (res.Count() == 0)
             {
-                return DocumentIDs;
+                return new();
             }
             else
             {

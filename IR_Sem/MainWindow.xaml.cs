@@ -151,6 +151,12 @@ namespace IR_Sem
                 return;
             }
 
+            if (QueryBox.Text == null || QueryBox.Text.Length == 0)
+            {
+                MessageBox.Show("Empty query");
+                return;
+            }
+
             if (BooleanSelector.IsChecked.HasValue)
             {
                 if (BooleanSelector.IsChecked.Value)

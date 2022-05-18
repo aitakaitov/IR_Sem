@@ -12,7 +12,7 @@ namespace Test
     [TestClass]
     public class ModelTests
     {
-        private const double EPS = 0.01;
+        private const double EPS = 0.001;
 
         [TestMethod]
         public void TokenizerTest()
