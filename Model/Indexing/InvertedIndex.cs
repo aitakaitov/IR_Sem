@@ -255,7 +255,7 @@ namespace Model.Indexing
                         // No results
                         return new();
                     }
-                    else if (documentIdsLeft.Count == 0)
+/*                    else if (documentIdsLeft.Count == 0)
                     {
                         // Pass right
                         return documentIdsRight;
@@ -264,7 +264,7 @@ namespace Model.Indexing
                     {
                         // Pass left
                         return documentIdsLeft;
-                    }
+                    } */
 
                     if (queryNode.Type == ParserNode.NodeType.AND)
                     {
@@ -335,7 +335,7 @@ namespace Model.Indexing
             var queryVectorNorm = CalculateVectorNorm(queryVector);
 
             // Narrow the documents with boolean search
-            var prefilteredDocuments = BooleanSearchIds(PreprocessQueryForPrefiltering(query.QueryText, "OR"));
+            var prefilteredDocuments = BooleanSearchIds(PreprocessQueryForPrefiltering(query.QueryText, "AND"));
             if (prefilteredDocuments.Count < 5)
             {
                 prefilteredDocuments = BooleanSearchIds(PreprocessQueryForPrefiltering(query.QueryText, "OR"));
@@ -409,7 +409,7 @@ namespace Model.Indexing
                 {
                     if (i < tokens.Count - 1)
                     {
-                        newQuery += tokens[i] + " OR "; //(i % 2 == 0 ? "AND " : "OR ");
+                        newQuery += tokens[i] + " OR "; 
                     }
                     else
                     {
