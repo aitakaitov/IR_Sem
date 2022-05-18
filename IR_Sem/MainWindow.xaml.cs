@@ -24,6 +24,7 @@ using System.Collections.ObjectModel;
 using View.Dialogs;
 using View;
 using System.Threading;
+using System.Windows.Threading;
 
 namespace IR_Sem
 {
@@ -33,6 +34,12 @@ namespace IR_Sem
     public partial class MainWindow : Window
     {
         public Controller.Controller Controller { get; set; } = new();
+
+        /// <summary>
+        /// Loading dialog window which is shown when creating index or running eval
+        /// </summary>
+        private LoadingDialog LoadingDialog { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -48,13 +55,26 @@ namespace IR_Sem
 
             var result = indexDialog.GetResult();
 
-            LoadingDialog loadingDialog = new LoadingDialog();
-            loadingDialog.Title = "Indexing";
-            loadingDialog.Show();
+            LoadingDialog = new LoadingDialog();
+            LoadingDialog.Title = "Indexing";
+            LoadingDialog.Show();
+
             SetControlsEnabled(false);
+
+            Thread thread = new Thread(() => CreateIndexThread(result));
+            thread.Start();
+        }
+
+        /// <summary>
+        /// Thread method that takes care of new index creating without
+        /// blocking the UI, which would prevent the loading dialog window from rendering
+        /// </summary>
+        /// <param name="result"></param>
+        private void CreateIndexThread(IndexDialogWindow.IndexCreationDialogResult result)
+        {
             try
             {
-                var newIndex = Controller.CreateIndex(new()
+                var res = Controller.CreateIndex(new()
                 {
                     DocumentDirectoryPath = result.SelectedDirectory,
                     StopwordsFilePath = result.SelectedFile,
@@ -63,16 +83,19 @@ namespace IR_Sem
                     Lowercase = result.Lowercase,
                     Name = result.Name
                 });
-                Controller.SelectedIndex = newIndex;
-                loadingDialog.Close();
+
+                Dispatcher.Invoke(() => Controller.AvailableIndexes.Add(res));
+                Controller.SelectedIndex = res;
+                Dispatcher.Invoke(() => SetControlsEnabled(true));
+                Dispatcher.Invoke(() => LoadingDialog.Close());
             }
             catch (Exception ex)
             {
-                loadingDialog.Close();
+                Dispatcher.Invoke(() => LoadingDialog.Close());
                 MessageBox.Show(ex.Message);
+                Dispatcher.Invoke(() => SetControlsEnabled(true));
+                return;
             }
-
-            SetControlsEnabled(true);
         }
 
         private void SetControlsEnabled(bool enabled)
@@ -174,21 +197,35 @@ namespace IR_Sem
 
             var directory = dialog.SelectedDirectory;
 
-            var loadingDialog = new LoadingDialog();
-            loadingDialog.Title = "TREC Eval";
-            loadingDialog.Show();
+            LoadingDialog = new LoadingDialog();
+            LoadingDialog.Title = "TREC Eval";
+            LoadingDialog.Show();
+
             SetControlsEnabled(false);
+
+            Thread t = new Thread(() => TrecEvalThread(directory));
+            t.Start();
+        }
+
+        /// <summary>
+        /// Thread method that handles the TREC evaluation. Allows for the 
+        /// loading dialog window to be displayed.
+        /// </summary>
+        /// <param name="dir"></param>
+        private void TrecEvalThread(string dir)
+        {
             try
             {
-                Controller.RunEval(directory);
-                loadingDialog.Close();
+                Controller.RunEval(dir);
+                Dispatcher.Invoke(() => LoadingDialog.Close());
+                Dispatcher.Invoke(() => SetControlsEnabled(true));
             }
             catch (Exception ex)
             {
-                loadingDialog.Close();
+                Dispatcher.Invoke(() => LoadingDialog.Close());
                 MessageBox.Show(ex.Message);
+                Dispatcher.Invoke(() => SetControlsEnabled(true));
             }
-            SetControlsEnabled(true);
         }
     }
 }

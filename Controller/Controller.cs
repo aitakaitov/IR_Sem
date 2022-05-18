@@ -70,7 +70,6 @@ namespace Controller
             var documents = DocumentLoaderText.Load(request.DocumentDirectoryPath);
             index.Index(documents);
 
-            AvailableIndexes.Add(index);
             return index;
         }
 
