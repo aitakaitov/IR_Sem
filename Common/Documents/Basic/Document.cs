@@ -10,10 +10,10 @@ namespace Common.Documents.Basic
     /// <summary>
     /// Text-only document
     /// </summary>
-    public class Document : IDocument
+    public class Document : ADocument
     {
         public string Text { get; set; }
 
-        public string GetRelevantText() { return Text; }
+        public override string GetRelevantText() { return Text; }
     }
 }

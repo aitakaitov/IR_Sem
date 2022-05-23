@@ -132,7 +132,7 @@ namespace Test
         [TestMethod]
         public void BooleanSearchTest()
         {
-            List<IDocument> documents = new()
+            List<ADocument> documents = new()
             {
                 new Document() { Text = "tropical fish include fish found in tropical enviroments" },
                 new Document() { Text = "fish live in a sea" },
@@ -205,7 +205,7 @@ namespace Test
 
             InvertedIndex index = Utils.CreateInvertedIndexForTestData();
 
-            List<IDocument> documents = new()
+            List<ADocument> documents = new()
             {
                 new Document() { Text = "Plzeň je krásné město a je to krásné místo" },
                 new Document() { Text = "Ostrava je ošklivé místo" },
@@ -242,7 +242,7 @@ namespace Test
 
             InvertedIndex index = Utils.CreateInvertedIndexForTestData();
 
-            List<IDocument> documents = new()
+            List<ADocument> documents = new()
             {
                 new Document() { Text = "tropical fish include fish found in tropical enviroments" },
                 new Document() { Text = "fish live in a sea" },

@@ -16,9 +16,9 @@ namespace Common.Utils
         /// </summary>
         /// <param name="directoryPath">directory</param>
         /// <returns>List of Documents</returns>
-        public static List<IDocument> Load(string directoryPath)
+        public static List<ADocument> Load(string directoryPath)
         {
-            List<IDocument> documents = new();
+            List<ADocument> documents = new();
             var files = Directory.GetFiles(directoryPath);
             foreach (var file in files)
             {

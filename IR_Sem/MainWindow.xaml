@@ -39,14 +39,18 @@
                 <!-- 9 -->
                 <RowDefinition Height="30" />
                 <!-- 10 -->
-                <RowDefinition />
+                <RowDefinition Height="30" />
                 <!-- 11 -->
                 <RowDefinition Height="30" />
                 <!-- 12 -->
+                <RowDefinition />
+                <!-- 13 -->
+                <RowDefinition Height="30" />
+                <!-- 14 -->
             </Grid.RowDefinitions>
 
             <Label Grid.Row="0" Content="Index:" Grid.ColumnSpan="2" />
-            <ComboBox Grid.Row="1" x:Name="IndexComboBox" ItemsSource="{Binding Path=Controller.AvailableIndexes}" SelectedItem="{Binding Controller.SelectedIndex}" SelectionChanged="ComboBox_SelectionChanged" Text="Select index..." Grid.ColumnSpan="3" IsSynchronizedWithCurrentItem="True"/>
+            <ComboBox Grid.Row="1" x:Name="IndexComboBox" ItemsSource="{Binding Path=Controller.AvailableIndexes}" SelectedItem="{Binding Controller.SelectedIndex}" SelectionChanged="ComboBox_SelectionChanged" IsSynchronizedWithCurrentItem="True"/>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,2,0,0" HorizontalAlignment="Left">
                 <Button x:Name="NewIndexButton" Margin="0,0,2,0" Padding="2,0,2,0" Content="New Index" HorizontalAlignment="Left" Click="NewIndexButton_Click"/>
@@ -63,7 +67,11 @@
                 <Label Content="Total hits: " VerticalAlignment="Center" HorizontalAlignment="Center" />
                 <TextBlock x:Name="TotalHitsBlock" Text="{Binding Controller.TotalHits}" VerticalAlignment="Center" HorizontalAlignment="Center" />
             </StackPanel>
-            <Button Grid.Row="12" x:Name="TrecButton" Content="Run TREC Eval" Click="TrecButton_Click" />
+
+            <Label Grid.Row="11" Content="Query history:" />
+            <ComboBox Grid.Row="12" x:Name="HistoryComboBox" ItemsSource="{Binding Path=Controller.QueryHistory}" SelectionChanged="History_SelectionChanged" Text="" />
+
+            <Button Grid.Row="14" x:Name="TrecButton" Content="Run TREC Eval" Click="TrecButton_Click" />
         </Grid>
 
 

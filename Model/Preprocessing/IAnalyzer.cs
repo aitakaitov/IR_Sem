@@ -14,7 +14,7 @@ namespace Model.Preprocessing
         /// </summary>
         /// <param name="doc"></param>
         /// <returns></returns>
-        public List<string> Preprocess(IDocument doc);
+        public List<string> Preprocess(ADocument doc);
 
         /// <summary>
         /// Tokenize a string useing the same settings as the Analyzer

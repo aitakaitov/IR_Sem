@@ -17,16 +17,16 @@ namespace Common.Utils
         /// <typeparam name="T"></typeparam>
         /// <param name="directoryPath"></param>
         /// <returns></returns>
-        public static List<IDocument> Load<T>(string directoryPath) where T : IDocument
+        public static List<ADocument> Load<T>(string directoryPath) where T : ADocument
         {
-            List<IDocument> documents = new();
+            List<ADocument> documents = new();
             var files = Directory.GetFiles(directoryPath);
             foreach (var file in files)
             {
                 T document = JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
                 if (document == null)
                 {
-                    Console.WriteLine($"error deserializing file {file} to class {typeof(IDocument)}");
+                    Console.WriteLine($"error deserializing file {file} to class {typeof(ADocument)}");
                     continue;
                 };
                 documents.Add(document);

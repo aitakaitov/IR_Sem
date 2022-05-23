@@ -44,7 +44,7 @@ namespace Model.Preprocessing
         /// </summary>
         /// <param name="doc">document</param>
         /// <returns>tokens</returns>
-        public List<string> Preprocess(IDocument doc)
+        public List<string> Preprocess(ADocument doc)
         {
             string text = doc.GetRelevantText();
 

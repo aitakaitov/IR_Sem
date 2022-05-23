@@ -11,14 +11,14 @@ namespace Common.Documents.Trec
     /// TREC evaluation document
     /// For JSON parsing
     /// </summary>
-    public class TrecDocument : IDocument
+    public class TrecDocument : ADocument
     {
         public string Title { get; set; }
         public string Text { get; set; }
         public string Id { get; set; }
         public string Date { get; set; }
 
-        public string GetRelevantText()
+        public override string GetRelevantText()
         {
             return Title + " " + Text;
         }

@@ -1,5 +1,9 @@
-﻿using Common.Documents.Trec;
+﻿using Common.Documents;
+using Common.Documents.Trec;
 using Common.Utils;
+using Controller.Database;
+using Controller.Database.Entities;
+using Controller.Enums;
 using Controller.Transfer;
 using Model.Indexing;
 using Model.Preprocessing;
@@ -40,6 +44,22 @@ namespace Controller
         /// Total number of hits from last query
         /// </summary>
         public int TotalHits { get; set; } = 0;
+
+        public ObservableCollection<QueryResult> QueryHistory { get; set; } = new();
+
+        private DatabaseContext databaseContext;
+
+        private Action<EQueryType> SetQueryTypeCallback;
+        private Action<string> SetQueryStringCallback;
+
+        public Controller(Action<EQueryType> setQueryTypeCallback, Action<string> setQueryStringCallback)
+        {
+            databaseContext = new DatabaseContext();
+            databaseContext.Database.EnsureDeleted();
+            databaseContext.Database.EnsureCreated();
+            SetQueryTypeCallback = setQueryTypeCallback;
+            SetQueryStringCallback = setQueryStringCallback;
+        }
 
         /// <summary>
         /// Creates a new index and adds it to AvailableIndexes
@@ -113,6 +133,35 @@ namespace Controller
             RelevantDocuments.Clear();
             documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
             TotalHits = documents.Item2;
+
+            StoreQueryResults(documents.Item1, queryText, EQueryType.BOOLEAN);
+        }
+
+        private void StoreQueryResults(List<ADocument> documents, string query, EQueryType type)
+        {
+            List<DocumentInfo> documentInfos = new List<DocumentInfo>();
+            for (int i = 0; i < documents.Count; i++)
+            {
+                documentInfos.Add(new()
+                {
+                    DocumentId = documents[i].Id,
+                    OrderInQuery = i
+                });
+            }
+
+            QueryResult qr = new()
+            {
+                Query = query,
+                Documents = documentInfos,
+                DateQueried = DateTime.Now,
+                QueryType = type,
+                IndexName = SelectedIndex.ToString()
+            };
+
+            databaseContext.Queries.Add(qr);
+            databaseContext.SaveChanges();
+
+            QueryHistory.Insert(0, qr);
         }
 
         /// <summary>
@@ -131,6 +180,8 @@ namespace Controller
             RelevantDocuments.Clear();
             documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
             TotalHits = documents.Item2;
+
+            StoreQueryResults(documents.Item1, queryText, EQueryType.VECTOR);
         }
 
         /// <summary>
@@ -164,7 +215,6 @@ namespace Controller
             List<string> lines = new();
             for (int i = 0; i < queries.Count; i++)
             {
-
                 var query = queries[i] as Topic;
                 var result = index.VectorSpaceSearch(new()
                 {
@@ -192,6 +242,34 @@ namespace Controller
             }
 
             File.WriteAllLines(directory + "/results.txt", lines);
+        }
+
+        public void UpdateHistory()
+        {
+            QueryHistory.Clear();
+            databaseContext.Queries
+                .Where(q => q.IndexName == SelectedIndex.ToString())
+                .OrderByDescending(q => q.DateQueried)
+                .ToList()
+                .ForEach(q => QueryHistory.Add(q));
+        }
+
+
+        public void SetToHistory(object result)
+        {
+            if (result is not QueryResult)
+            {
+                return;
+            }
+
+            var queryResult = (QueryResult)result;
+            SetQueryStringCallback(queryResult.Query);
+            SetQueryTypeCallback(queryResult.QueryType);
+
+            var documentIds = queryResult.Documents.OrderBy(di => di.OrderInQuery).Select(di => di.DocumentId).ToList();
+            var documents = SelectedIndex.GetDocumentsByIds(documentIds);
+            RelevantDocuments.Clear();
+            documents.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
         }
     }
 }

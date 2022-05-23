@@ -32,7 +32,7 @@ namespace Model.Indexing
         /// <summary>
         /// Documents list - index is documentId
         /// </summary>
-        private List<IDocument> Documents = new();
+        private List<ADocument> Documents = new();
 
         /// <summary>
         /// List of documentIds
@@ -77,7 +77,7 @@ namespace Model.Indexing
             Name = name;
         }
 
-        public void Index(List<IDocument> documents)
+        public void Index(List<ADocument> documents)
         {
             if (Indexed)
             {
@@ -88,11 +88,12 @@ namespace Model.Indexing
             List<Posting> postings = new List<Posting>();
             for (int i = 0; i < documents.Count; i++)
             {
-                IDocument document = documents[i];
+                ADocument document = documents[i];
                 List<string> tokens = Analyzer.Preprocess(document);
                 CreatePostings(postings, tokens, i);
 
                 Documents.Add(document);
+                document.Id = i;
                 DocumentIDs.Add(i);
             }
 
@@ -188,7 +189,7 @@ namespace Model.Indexing
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public (List<IDocument>, int) BooleanSearch(BasicQuery query)
+        public (List<ADocument>, int) BooleanSearch(BasicQuery query)
         {
             ParserNode parsedQuery = BooleanQueryParser.ParseQuery(query.QueryText);
             var documentIds = GetDocumentsForQuery(parsedQuery);
@@ -200,7 +201,7 @@ namespace Model.Indexing
             }
 
             int totalCount = documentIds.Count;
-            List<IDocument> documents = new();
+            List<ADocument> documents = new();
             if (query.TopCount == -1)
             {
                 query.TopCount = totalCount;
@@ -255,16 +256,16 @@ namespace Model.Indexing
                         // No results
                         return new();
                     }
-/*                    else if (documentIdsLeft.Count == 0)
-                    {
-                        // Pass right
-                        return documentIdsRight;
-                    }
-                    else if (documentIdsRight.Count == 0)
-                    {
-                        // Pass left
-                        return documentIdsLeft;
-                    } */
+                    /*                    else if (documentIdsLeft.Count == 0)
+                                        {
+                                            // Pass right
+                                            return documentIdsRight;
+                                        }
+                                        else if (documentIdsRight.Count == 0)
+                                        {
+                                            // Pass left
+                                            return documentIdsLeft;
+                                        } */
 
                     if (queryNode.Type == ParserNode.NodeType.AND)
                     {
@@ -311,13 +312,13 @@ namespace Model.Indexing
         }
 
         /// <summary>
-        /// Performs TF-IDF vector-space search returning top K IDocuments and number of non-zero cosine similarity documents
+        /// Performs TF-IDF vector-space search returning top K ADocuments and number of non-zero cosine similarity documents
         /// Performs boolean prefiltering with AND operators and if no relevant documents are returned, the preprocessing is
         /// repeated with OR operators
         /// </summary>
         /// <param name="query"></param>
         /// <returns>tuple of (top K IDocs, count)</returns>
-        public (List<IDocument>, int, List<float>) VectorSpaceSearch(BasicQuery query)
+        public (List<ADocument>, int, List<float>) VectorSpaceSearch(BasicQuery query)
         {
             // Get TF-IDF vector for query
             var res = GetQueryVector(query);
@@ -356,7 +357,7 @@ namespace Model.Indexing
             }
 
             // Get top K results
-            List<IDocument> results = new();
+            List<ADocument> results = new();
             List<float> scores = new();
             int count = 0;
             if (query.TopCount == -1)
@@ -409,7 +410,7 @@ namespace Model.Indexing
                 {
                     if (i < tokens.Count - 1)
                     {
-                        newQuery += tokens[i] + " OR "; 
+                        newQuery += tokens[i] + " OR ";
                     }
                     else
                     {
@@ -545,14 +546,9 @@ namespace Model.Indexing
             return termFreq * idf;
         }
 
-        private float[] NormalizeVector(float[] v)
+        public List<ADocument> GetDocumentsByIds(List<int> documentIds)
         {
-            float norm = v.Length;
-            for (int i = 0; i < v.Length; i++)
-            {
-                v[i] /= norm;
-            }
-            return v;
+            return Documents.Where(document => documentIds.Contains(document.Id)).ToList();
         }
 
         public override string ToString()

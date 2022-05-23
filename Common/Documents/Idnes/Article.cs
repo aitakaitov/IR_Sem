@@ -6,7 +6,7 @@ namespace Common.Documents.Idnes
     /// <summary>
     /// IDnes article class for JSON parsing purposes
     /// </summary>
-    public class Article : IDocument
+    public class Article : ADocument
     {
         public Article(string headline, string opener, string text, string published, string modified,
             List<string> authors, List<string> tags, List<string> related, List<Comment> comments)
@@ -32,7 +32,7 @@ namespace Common.Documents.Idnes
         public List<string> RelatedArticles { get; set; }
         public List<Comment> Comments { get; set; }
 
-        public string GetRelevantText()
+        public override string GetRelevantText()
         {
             // Ignore authors, related articles and comments
             string s = Headline + "\n" + Opener + "\n" + Text + "\n";

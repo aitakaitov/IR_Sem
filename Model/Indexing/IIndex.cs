@@ -13,22 +13,24 @@ namespace Model.Indexing
     /// </summary>
     public interface IIndex
     {
+        public List<ADocument> GetDocumentsByIds(List<int> documentIds);
+
         /// <summary>
         /// Index a list of documents
         /// </summary>
         /// <param name="documents"></param>
-        public void Index(List<IDocument> documents);
+        public void Index(List<ADocument> documents);
 
         /// <summary>
         /// Perform boolean search - WIP
         /// </summary>
-        public (List<IDocument>, int) BooleanSearch(BasicQuery query);
+        public (List<ADocument>, int) BooleanSearch(BasicQuery query);
 
         /// <summary>
         /// Perform vector-space search on a query
         /// </summary>
         /// <param name="query"></param>
         /// <returns>(top K IDocs, total count of relevant)</returns>
-        public (List<IDocument>, int, List<float>) VectorSpaceSearch(BasicQuery query);
+        public (List<ADocument>, int, List<float>) VectorSpaceSearch(BasicQuery query);
     }
 }

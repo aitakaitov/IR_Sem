@@ -11,7 +11,7 @@ namespace Common.Documents.Trec
     /// TREC evaluation topic
     /// For JSON parsing
     /// </summary>
-    public class Topic : IDocument
+    public class Topic : ADocument
     {
         public string Id { get; set; }
         public string Narrative { get; set; }
@@ -19,7 +19,7 @@ namespace Common.Documents.Trec
         public string Title { get; set; }
         public string Lang { get; set; }
 
-        public string GetRelevantText()
+        public override string GetRelevantText()
         {
             return Title;
         }

@@ -4,7 +4,7 @@ namespace Common.Documents.Idnes
     /// <summary>
     /// IDnes article comment for JSON parsing purposes
     /// </summary>
-    public class Comment : IDocument
+    public class Comment : ADocument
     {
         public Comment(string text, string timestamp, string author, int positive, int negative)
         {
@@ -21,7 +21,7 @@ namespace Common.Documents.Idnes
         public int PositiveReactions { get; set; }
         public int NegativeReactions { get; set; }
 
-        public string GetRelevantText()
+        public override string GetRelevantText()
         {
             return Author + "\n" + Text;
         }

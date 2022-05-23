@@ -25,6 +25,7 @@ using View.Dialogs;
 using View;
 using System.Threading;
 using System.Windows.Threading;
+using Controller.Enums;
 
 namespace IR_Sem
 {
@@ -33,7 +34,7 @@ namespace IR_Sem
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Controller.Controller Controller { get; set; } = new();
+        public Controller.Controller Controller { get; set; }
 
         /// <summary>
         /// Loading dialog window which is shown when creating index or running eval
@@ -43,6 +44,27 @@ namespace IR_Sem
         public MainWindow()
         {
             InitializeComponent();
+            Controller = new(SetQueryType, SetQueryString);
+        }
+
+        private void SetQueryString(string s)
+        {
+            QueryBox.Text = s;
+        }
+
+        private void SetQueryType(EQueryType type)
+        {
+            switch (type)
+            {
+                case EQueryType.BOOLEAN:
+                    BooleanSelector.IsChecked = true;
+                    break;
+                case EQueryType.VECTOR:
+                    VectorSelector.IsChecked = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void NewIndexButton_Click(object sender, RoutedEventArgs e)
@@ -116,6 +138,20 @@ namespace IR_Sem
             }
 
             Controller.SelectedIndex = comboBox.SelectedItem as IIndex;
+            Controller.UpdateHistory();
+        }
+
+        private void History_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox comboBox = sender as ComboBox;
+
+            if (comboBox.SelectedItem == null)
+            {
+                return;
+            }
+
+
+            Controller.SetToHistory(comboBox.SelectedItem);
         }
 
         private void DeleteSelectedButton_Click(object sender, RoutedEventArgs e)
