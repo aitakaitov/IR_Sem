@@ -28,12 +28,12 @@ namespace Controller
         /// <summary>
         /// Currently selected index
         /// </summary>
-        public IIndex SelectedIndex { get; set; }
+        public AIndex SelectedIndex { get; set; }
 
         /// <summary>
         /// All available indexes
         /// </summary>
-        public ObservableCollection<IIndex> AvailableIndexes { get; set; } = new();
+        public ObservableCollection<AIndex> AvailableIndexes { get; set; } = new();
 
         /// <summary>
         /// Currently displayed relevant documents
@@ -45,28 +45,52 @@ namespace Controller
         /// </summary>
         public int TotalHits { get; set; } = 0;
 
+        /// <summary>
+        /// History of queries made over the selected index
+        /// </summary>
         public ObservableCollection<QueryResult> QueryHistory { get; set; } = new();
 
+        /// <summary>
+        /// Database
+        /// </summary>
         private DatabaseContext databaseContext;
 
-        private Action<EQueryType> SetQueryTypeCallback;
-        private Action<string> SetQueryStringCallback;
+        /// <summary>
+        /// Callback to View to set the query type
+        /// </summary>
+        private Action<EQueryType>? SetQueryTypeCallback = null;
 
-        public Controller(Action<EQueryType> setQueryTypeCallback, Action<string> setQueryStringCallback)
+        /// <summary>
+        /// Callback to View to set the query string
+        /// </summary>
+        private Action<string>? SetQueryStringCallback = null;
+
+        public Controller()
         {
             databaseContext = new DatabaseContext();
             databaseContext.Database.EnsureDeleted();
             databaseContext.Database.EnsureCreated();
+        }
+
+        /// <summary>
+        /// Sets the required callbacks
+        /// If not called, history does not work
+        /// </summary>
+        /// <param name="setQueryTypeCallback"></param>
+        /// <param name="setQueryStringCallback"></param>
+        public void SetCallbacks(Action<EQueryType> setQueryTypeCallback, Action<string> setQueryStringCallback)
+        {
             SetQueryTypeCallback = setQueryTypeCallback;
             SetQueryStringCallback = setQueryStringCallback;
         }
+
 
         /// <summary>
         /// Creates a new index and adds it to AvailableIndexes
         /// </summary>
         /// <param name="request"></param>
         /// <returns>the new index</returns>
-        public IIndex CreateIndex(CreateIndexRequest request)
+        public AIndex CreateIndex(CreateIndexRequest request)
         {
             AnalyzerConfig config = new()
             {
@@ -85,7 +109,7 @@ namespace Controller
             ITokenizer tokenizer = new Tokenizer();
             IAnalyzer analyzer = new Analyzer(tokenizer, stemmer, stopwords, config);
 
-            IIndex index = new InvertedIndex(analyzer, new(), request.Name);
+            AIndex index = new InvertedIndex(analyzer, new(), request.Name);
 
             var documents = DocumentLoaderText.Load(request.DocumentDirectoryPath);
             index.Index(documents);
@@ -112,7 +136,7 @@ namespace Controller
             return stopwords;
         }
 
-        public void DeleteIndex(IIndex index)
+        public void DeleteIndex(AIndex index)
         {
             AvailableIndexes.Remove(index);
         }
@@ -208,7 +232,7 @@ namespace Controller
 
             ITokenizer tokenizer = new Tokenizer();
             IAnalyzer analyzer = new Analyzer(tokenizer, stemmer, stopwords, config);
-            IIndex index = new InvertedIndex(analyzer, new(), "TREC");
+            AIndex index = new InvertedIndex(analyzer, new(), "TREC");
 
             index.Index(documents);
 
@@ -244,6 +268,10 @@ namespace Controller
             File.WriteAllLines(directory + "/results.txt", lines);
         }
 
+        /// <summary>
+        /// Updates the history of queries based on the current selected index
+        /// The queries are sorted based on their time of execution
+        /// </summary>
         public void UpdateHistory()
         {
             QueryHistory.Clear();
@@ -254,10 +282,14 @@ namespace Controller
                 .ForEach(q => QueryHistory.Add(q));
         }
 
-
+        /// <summary>
+        /// Sets the results view to the results of the passed QueryResult
+        /// Uses callbacks to view in order to set the query type and query string
+        /// </summary>
+        /// <param name="result">QueryResult</param>
         public void SetToHistory(object result)
         {
-            if (result is not QueryResult)
+            if (result is not QueryResult || SetQueryStringCallback == null || SetQueryTypeCallback == null)
             {
                 return;
             }
@@ -270,6 +302,16 @@ namespace Controller
             var documents = SelectedIndex.GetDocumentsByIds(documentIds);
             RelevantDocuments.Clear();
             documents.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
+            TotalHits = documents.Count;
+        }
+
+        /// <summary>
+        /// Returns the names of already created indexes
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetAvailableIndexesNames()
+        {
+            return AvailableIndexes.Select(i => i.ToString()).ToList();
         }
     }
 }

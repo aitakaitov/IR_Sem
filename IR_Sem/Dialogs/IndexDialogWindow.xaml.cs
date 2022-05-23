@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
@@ -44,9 +45,12 @@ namespace View.Dialogs
             }
         }
 
-        public IndexDialogWindow()
+        private List<string> TakenIndexNames = new();
+
+        public IndexDialogWindow(List<string> indexNames)
         {
             InitializeComponent();
+            TakenIndexNames = indexNames;
         }
 
         private void BrowseDirectoryButton_Click(object sender, RoutedEventArgs e)
@@ -80,6 +84,11 @@ namespace View.Dialogs
             else if (IndexName == null || IndexName == "")
             {
                 MessageBox.Show("Index name empty");
+                return;
+            }
+            else if (TakenIndexNames.Contains(IndexName))
+            {
+                MessageBox.Show("Index name already used");
                 return;
             }
             else
@@ -174,7 +183,7 @@ namespace View.Dialogs
             };
         }
 
-        
+
         public class IndexCreationDialogResult
         {
             public string SelectedDirectory { get; set; }

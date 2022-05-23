@@ -12,7 +12,7 @@ namespace Model.Indexing
     /// <summary>
     /// Inverted index
     /// </summary>
-    public class InvertedIndex : IIndex
+    public class InvertedIndex : AIndex
     {
         /// <summary>
         /// Whether or not Index method was called
@@ -77,7 +77,7 @@ namespace Model.Indexing
             Name = name;
         }
 
-        public void Index(List<ADocument> documents)
+        public override void Index(List<ADocument> documents)
         {
             if (Indexed)
             {
@@ -176,6 +176,12 @@ namespace Model.Indexing
             return postings.Select(p => p.Term).Distinct().ToList();
         }
 
+        /// <summary>
+        /// Creates postings from list of tokens and document id
+        /// </summary>
+        /// <param name="postings">Postings list to add the new postings to</param>
+        /// <param name="tokens"></param>
+        /// <param name="docId"></param>
         private void CreatePostings(List<Posting> postings, List<string> tokens, int docId)
         {
             foreach (var token in tokens)
@@ -189,7 +195,7 @@ namespace Model.Indexing
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public (List<ADocument>, int) BooleanSearch(BasicQuery query)
+        public override (List<ADocument>, int) BooleanSearch(BasicQuery query)
         {
             ParserNode parsedQuery = BooleanQueryParser.ParseQuery(query.QueryText);
             var documentIds = GetDocumentsForQuery(parsedQuery);
@@ -256,16 +262,6 @@ namespace Model.Indexing
                         // No results
                         return new();
                     }
-                    /*                    else if (documentIdsLeft.Count == 0)
-                                        {
-                                            // Pass right
-                                            return documentIdsRight;
-                                        }
-                                        else if (documentIdsRight.Count == 0)
-                                        {
-                                            // Pass left
-                                            return documentIdsLeft;
-                                        } */
 
                     if (queryNode.Type == ParserNode.NodeType.AND)
                     {
@@ -318,7 +314,7 @@ namespace Model.Indexing
         /// </summary>
         /// <param name="query"></param>
         /// <returns>tuple of (top K IDocs, count)</returns>
-        public (List<ADocument>, int, List<float>) VectorSpaceSearch(BasicQuery query)
+        public override (List<ADocument>, int, List<float>) VectorSpaceSearch(BasicQuery query)
         {
             // Get TF-IDF vector for query
             var res = GetQueryVector(query);
@@ -475,10 +471,7 @@ namespace Model.Indexing
             {
                 var termId = DocumentTermIdList[docId][i];
                 var documentValue = DocumentTermList[docId][i];
-                //if (DocumentIndex[termId].Documents.ContainsKey(docId))
-                //{
                 vector[termId] = CalculateTFIDFDocument(documentValue.TermFrequency, DocumentIndex[termId].DocumentFrequency);
-                //}
             }
 
             return vector;
@@ -546,9 +539,18 @@ namespace Model.Indexing
             return termFreq * idf;
         }
 
-        public List<ADocument> GetDocumentsByIds(List<int> documentIds)
+        public override List<ADocument> GetDocumentsByIds(List<int> documentIds)
         {
-            return Documents.Where(document => documentIds.Contains(document.Id)).ToList();
+            List<ADocument> results = new();
+            foreach (int documentId in documentIds)
+            {
+                if (documentId >= Documents.Count)
+                {
+                    throw new InvalidOperationException("Non existent document");
+                }
+                results.Add(Documents[documentId]);
+            }
+            return results;
         }
 
         public override string ToString()
@@ -583,6 +585,10 @@ namespace Model.Indexing
             return false;
         }
 
+        /// <summary>
+        /// To make it possible to use Contains
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return this.DocumentId.GetHashCode();

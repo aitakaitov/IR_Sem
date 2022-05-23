@@ -34,7 +34,7 @@ namespace IR_Sem
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Controller.Controller Controller { get; set; }
+        public Controller.Controller Controller { get; set; } = new();
 
         /// <summary>
         /// Loading dialog window which is shown when creating index or running eval
@@ -44,14 +44,22 @@ namespace IR_Sem
         public MainWindow()
         {
             InitializeComponent();
-            Controller = new(SetQueryType, SetQueryString);
+            Controller.SetCallbacks(SetQueryType, SetQueryString);
         }
 
+        /// <summary>
+        /// Callback for the Controller to be able to set the displayed query string
+        /// </summary>
+        /// <param name="s"></param>
         private void SetQueryString(string s)
         {
             QueryBox.Text = s;
         }
 
+        /// <summary>
+        /// Callback for the Controller to be able to set the displayed query type
+        /// </summary>
+        /// <param name="type"></param>
         private void SetQueryType(EQueryType type)
         {
             switch (type)
@@ -69,7 +77,7 @@ namespace IR_Sem
 
         private void NewIndexButton_Click(object sender, RoutedEventArgs e)
         {
-            IndexDialogWindow indexDialog = new();
+            IndexDialogWindow indexDialog = new(Controller.GetAvailableIndexesNames());
             if (indexDialog.ShowDialog() != true)
             {
                 return;
@@ -120,6 +128,10 @@ namespace IR_Sem
             }
         }
 
+        /// <summary>
+        /// Enables or disables all buttons
+        /// </summary>
+        /// <param name="enabled"></param>
         private void SetControlsEnabled(bool enabled)
         {
             SearchButton.IsEnabled = enabled;
@@ -128,6 +140,12 @@ namespace IR_Sem
             DeleteSelectedButton.IsEnabled = enabled;
         }
 
+        /// <summary>
+        /// When the index combobox selection changes, propagate the change to Controller
+        /// Update the query history
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
@@ -137,10 +155,15 @@ namespace IR_Sem
                 return;
             }
 
-            Controller.SelectedIndex = comboBox.SelectedItem as IIndex;
+            Controller.SelectedIndex = comboBox.SelectedItem as AIndex;
             Controller.UpdateHistory();
         }
 
+        /// <summary>
+        /// When a query is selected in query history, notify controller
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void History_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
@@ -149,7 +172,6 @@ namespace IR_Sem
             {
                 return;
             }
-
 
             Controller.SetToHistory(comboBox.SelectedItem);
         }
@@ -198,6 +220,7 @@ namespace IR_Sem
                 if (BooleanSelector.IsChecked.Value)
                 {
                     Controller.MakeBooleanQuery(QueryBox.Text);
+                    HistoryComboBox.SelectedIndex = 0;
                     CheckResultsNotEmpty();
                     return;
                 }
@@ -208,6 +231,7 @@ namespace IR_Sem
                 if (VectorSelector.IsChecked.Value)
                 {
                     Controller.MakeVectorQuery(QueryBox.Text);
+                    HistoryComboBox.SelectedIndex = 0;
                     CheckResultsNotEmpty();
                     return;
                 }
@@ -222,6 +246,11 @@ namespace IR_Sem
             }
         }
 
+        /// <summary>
+        /// On doubleclick on a result in results view, pop up a full view of the document
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ListBoxItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             DocumentPreview documentPreview = new DocumentPreview(ResultsView.SelectedItem as string);
