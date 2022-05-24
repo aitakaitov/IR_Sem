@@ -39,7 +39,7 @@ namespace IR_Sem
         /// <summary>
         /// Loading dialog window which is shown when creating index or running eval
         /// </summary>
-        private LoadingDialog LoadingDialog { get; set; }
+        private LoadingDialog LoadingDialog { get; set; } = new();
 
         public MainWindow()
         {
@@ -148,7 +148,11 @@ namespace IR_Sem
         /// <param name="e"></param>
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ComboBox comboBox = sender as ComboBox;
+            ComboBox? comboBox = sender as ComboBox;
+            if (comboBox == null)
+            {
+                return;
+            }
 
             if (comboBox.SelectedItem == null)
             {
@@ -166,7 +170,11 @@ namespace IR_Sem
         /// <param name="e"></param>
         private void History_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ComboBox comboBox = sender as ComboBox;
+            ComboBox? comboBox = sender as ComboBox;
+            if (comboBox == null)
+            {
+                return;
+            }
 
             if (comboBox.SelectedItem == null)
             {
@@ -253,7 +261,14 @@ namespace IR_Sem
         /// <param name="e"></param>
         private void ListBoxItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            DocumentPreview documentPreview = new DocumentPreview(ResultsView.SelectedItem as string);
+            if (ResultsView.SelectedItem == null)
+            {
+                return;
+            }
+
+            var documentContent = (string) ResultsView.SelectedItem;
+
+            DocumentPreview documentPreview = new DocumentPreview(documentContent);
             documentPreview.Title = "Document Preview";
             documentPreview.Show();
         }

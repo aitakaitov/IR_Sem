@@ -42,17 +42,17 @@ namespace Model.Indexing
         /// <summary>
         /// DocumentId - termId mapping to improve vector-space search speed
         /// </summary>
-        private List<int>[] DocumentTermIdList;
+        private List<int>[] DocumentTermIdList = new List<int>[1];
 
         /// <summary>
         /// DocumentId - Document-TermFrequency mapping to improve vector-space search speed
         /// </summary>
-        private List<DocumentValue>[] DocumentTermList;
+        private List<DocumentValue>[] DocumentTermList = new List<DocumentValue>[1];
 
         /// <summary>
         /// Inverted index - term - documents mapping
         /// </summary>
-        private InvertedIndexValue[] DocumentIndex;
+        private InvertedIndexValue[] DocumentIndex = new InvertedIndexValue[1];
 
         /// <summary>
         /// Term to termId mapping
@@ -62,7 +62,7 @@ namespace Model.Indexing
         /// <summary>
         /// TermId to term mapping
         /// </summary>
-        private string[] IdTermMap;
+        private string[] IdTermMap = new string[1];
 
         /// <summary>
         /// Index name
@@ -248,12 +248,22 @@ namespace Model.Indexing
             {
                 if (queryNode.Type == ParserNode.NodeType.NOT)
                 {
+                    if (queryNode.LeftChild == null)
+                    {
+                        throw new InvalidOperationException("Error parsing query");
+                    }
+
                     // Parser uses LeftChild for the NOT nodes
                     var documentIds = GetDocumentsForQuery(queryNode.LeftChild);
                     return DocumentIDs.Except(documentIds).ToList();
                 }
                 else
                 {
+                    if (queryNode.LeftChild == null || queryNode.RightChild == null)
+                    {
+                        throw new InvalidOperationException("Error parsing query");
+                    }
+
                     var documentIdsLeft = GetDocumentsForQuery(queryNode.LeftChild);
                     var documentIdsRight = GetDocumentsForQuery(queryNode.RightChild);
 
@@ -574,6 +584,11 @@ namespace Model.Indexing
 
         public int CompareTo(DocumentValue? other)
         {
+            if (other == null)
+            {
+                return 1;
+            }
+
             return DocumentId - other.DocumentId;
         }
 

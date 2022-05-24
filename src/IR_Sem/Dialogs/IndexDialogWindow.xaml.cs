@@ -186,12 +186,12 @@ namespace View.Dialogs
 
         public class IndexCreationDialogResult
         {
-            public string SelectedDirectory { get; set; }
+            public string SelectedDirectory { get; set; } = "";
             public string? SelectedFile { get; set; }
             public bool Stem { get; set; }
             public bool Lowercase { get; set; }
             public bool RemoveAccents { get; set; }
-            public string Name { get; set; }
+            public string Name { get; set; } = "";
         }
     }
 }

@@ -23,13 +23,13 @@ namespace Common.Utils
             var files = Directory.GetFiles(directoryPath);
             foreach (var file in files)
             {
-                T document = JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
+                T? document = JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
                 if (document == null)
                 {
                     Console.WriteLine($"error deserializing file {file} to class {typeof(ADocument)}");
                     continue;
                 };
-                documents.Add(document);
+                documents.Add((T) document);
             }
 
             return documents;

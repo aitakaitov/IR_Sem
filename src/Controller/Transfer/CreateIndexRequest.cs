@@ -14,7 +14,7 @@ namespace Controller.Transfer
         /// <summary>
         /// Index name
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         /// <summary>
         /// Whether to perform stemming or not
         /// Stemming works only for Czech
@@ -31,10 +31,10 @@ namespace Controller.Transfer
         /// <summary>
         /// Optional stopwords file path. If null, no stopwords are used
         /// </summary>
-        public string? StopwordsFilePath { get; set; }
+        public string? StopwordsFilePath { get; set; } = "";
         /// <summary>
         /// Path to directory with documents to index
         /// </summary>
-        public string DocumentDirectoryPath { get; set; }
+        public string DocumentDirectoryPath { get; set; } = "";
     }
 }

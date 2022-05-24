@@ -28,7 +28,7 @@ namespace Controller
         /// <summary>
         /// Currently selected index
         /// </summary>
-        public AIndex SelectedIndex { get; set; }
+        public AIndex? SelectedIndex { get; set; }
 
         /// <summary>
         /// All available indexes
@@ -148,6 +148,11 @@ namespace Controller
         /// <param name="queryText"></param>
         public void MakeBooleanQuery(string queryText)
         {
+            if (SelectedIndex == null)
+            {
+                throw new InvalidOperationException("No index selected");
+            }
+
             var documents = SelectedIndex.BooleanSearch(new()
             {
                 QueryText = queryText,
@@ -179,7 +184,7 @@ namespace Controller
                 Documents = documentInfos,
                 DateQueried = DateTime.Now,
                 QueryType = type,
-                IndexName = SelectedIndex.ToString()
+                IndexName = SelectedIndex.ToString()        // At this point we know an index is selected, because we had to make a query on it first
             };
 
             databaseContext.Queries.Add(qr);
@@ -195,6 +200,11 @@ namespace Controller
         /// <param name="queryText"></param>
         public void MakeVectorQuery(string queryText)
         {
+            if (SelectedIndex == null)
+            {
+                throw new InvalidOperationException("No index selected");
+            }
+
             var documents = SelectedIndex.VectorSpaceSearch(new()
             {
                 QueryText = queryText,
@@ -239,6 +249,7 @@ namespace Controller
             List<string> lines = new();
             for (int i = 0; i < queries.Count; i++)
             {
+                // We know it is a topic, so null is not an issue here
                 var query = queries[i] as Topic;
                 var result = index.VectorSpaceSearch(new()
                 {
@@ -251,15 +262,16 @@ namespace Controller
 
                 if (relevantDocuments.Count == 0)
                 {
-                    lines.Add(query.Id + " Q0 " + "abc" + " " + "99" + " " + 0.0 + " runindex1");
+                    lines.Add(query.TopicId + " Q0 " + "abc" + " " + "99" + " " + 0.0 + " runindex1");
                 }
                 else
                 {
                     for (int j = 0; j < relevantDocuments.Count; j++)
                     {
+                        // Again, we know it is a TrecDocument
                         var doc = relevantDocuments[j] as TrecDocument;
                         float score = scores[j];
-                        string line = query.Id + " Q0 " + doc.Id + " " + j + " " + score + " runindex1";
+                        string line = query.TopicId + " Q0 " + doc.DocumentId + " " + j + " " + score + " runindex1";
                         lines.Add(line);
                     }
                 }
@@ -274,6 +286,11 @@ namespace Controller
         /// </summary>
         public void UpdateHistory()
         {
+            if (SelectedIndex == null)
+            {
+                return;
+            }
+
             QueryHistory.Clear();
             databaseContext.Queries
                 .Where(q => q.IndexName == SelectedIndex.ToString())
@@ -289,7 +306,7 @@ namespace Controller
         /// <param name="result">QueryResult</param>
         public void SetToHistory(object result)
         {
-            if (result is not QueryResult || SetQueryStringCallback == null || SetQueryTypeCallback == null)
+            if (result is not QueryResult || SetQueryStringCallback == null || SetQueryTypeCallback == null || SelectedIndex == null)
             {
                 return;
             }

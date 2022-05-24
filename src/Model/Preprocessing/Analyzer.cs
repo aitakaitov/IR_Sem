@@ -11,7 +11,7 @@ namespace Model.Preprocessing
     public class Analyzer : IAnalyzer
     {
         private ITokenizer Tokenizer { get; set; }
-        private IStemmer Stemmer { get; set; }
+        private IStemmer? Stemmer { get; set; }
         private AnalyzerConfig Config { get; set; }
         private IStopwords Stopwords { get; set; }
 
@@ -60,7 +60,7 @@ namespace Model.Preprocessing
 
             var tokens = Tokenizer.Tokenize(text);
 
-            if (Config.PerformStemming)
+            if (Config.PerformStemming && Stemmer != null)
             {
                 tokens = Stemmer.StemTokens(tokens);
             }

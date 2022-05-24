@@ -345,8 +345,8 @@ namespace Common.Utils
 
         public string Text { get; set; } = "";
 
-        public ParserNode LeftChild { get; set; }
-        public ParserNode RightChild { get; set; }
+        public ParserNode? LeftChild { get; set; }
+        public ParserNode? RightChild { get; set; }
 
         public NodeType Type { get; set; }
 

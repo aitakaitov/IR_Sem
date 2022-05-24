@@ -14,7 +14,7 @@ namespace Controller.Database.Entities
         /// <summary>
         /// Query string
         /// </summary>
-        public string Query { get; set; }
+        public string Query { get; set; } = "";
 
         /// <summary>
         /// List of documents the query returned
@@ -30,7 +30,7 @@ namespace Controller.Database.Entities
         /// Name of the index
         /// Indexes should have unique names in order for this to work properly
         /// </summary>
-        public string IndexName { get; set; }
+        public string IndexName { get; set; } = "";
 
         public override string ToString()
         {
