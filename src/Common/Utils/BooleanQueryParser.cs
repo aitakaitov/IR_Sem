@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Lucene.Net.QueryParsers;
 
 namespace Common.Utils
 {
@@ -37,7 +36,7 @@ namespace Common.Utils
         private static ParserNode PostfixToTree(List<string> postfix)
         {
             Stack<ParserNode> stack = new();
-            ParserNode t1, t2, temp;
+            ParserNode temp;
 
             for (int i = 0; i < postfix.Count; i++)
             {
