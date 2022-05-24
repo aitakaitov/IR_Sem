@@ -1,31 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Controller.Enums;
+using Model.Indexing;
+using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Model.Preprocessing;
-using Common.Utils;
-using Common.Documents.Idnes;
-using Common.Documents.Basic;
-using Model.Indexing;
-using Common.Documents;
-using System.Diagnostics;
-using Model.Queries;
-using System.Collections.ObjectModel;
-using View.Dialogs;
-using View;
-using System.Threading;
 using System.Windows.Threading;
-using Controller.Enums;
+using View;
+using View.Dialogs;
 
 namespace IR_Sem
 {
@@ -266,7 +248,7 @@ namespace IR_Sem
                 return;
             }
 
-            var documentContent = (string) ResultsView.SelectedItem;
+            var documentContent = (string)ResultsView.SelectedItem;
 
             DocumentPreview documentPreview = new DocumentPreview(documentContent);
             documentPreview.Title = "Document Preview";

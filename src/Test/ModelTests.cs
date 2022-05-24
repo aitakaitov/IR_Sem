@@ -4,7 +4,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Model.Indexing;
 using Model.Preprocessing;
 using Model.Queries;
-using System;
 using System.Collections.Generic;
 
 namespace Test
@@ -41,7 +40,7 @@ namespace Test
                 "plzeň",
                 "je",
                 "hezčí"
-            };   
+            };
 
             Stopwords stopwordsFilled = new();
             stopwordsFilled.SetConfig(new()

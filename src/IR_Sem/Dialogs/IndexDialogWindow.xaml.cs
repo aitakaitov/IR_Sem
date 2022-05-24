@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Ookii.Dialogs.Wpf;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
-using Microsoft.Win32;
-using Ookii.Dialogs.Wpf;
 
 namespace View.Dialogs
 {

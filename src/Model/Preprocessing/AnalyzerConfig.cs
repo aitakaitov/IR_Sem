@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Model.Preprocessing
+﻿namespace Model.Preprocessing
 {
     public class AnalyzerConfig
     {
@@ -26,7 +20,7 @@ namespace Model.Preprocessing
         /// Whether or lowercase or not
         /// </summary>
         public bool Lowercase { get; set; } = true;
-        
+
         /// <summary>
         /// Whether to perform stemming or not. Stemming works only for Czech
         /// </summary>

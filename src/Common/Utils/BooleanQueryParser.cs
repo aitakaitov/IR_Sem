@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Common.Utils
 {
@@ -322,6 +319,11 @@ namespace Common.Utils
 
     public class ParserNode
     {
+        /// <summary>
+        /// Pass either the term or operator
+        /// The node type is then automatically configured
+        /// </summary>
+        /// <param name="text"></param>
         public ParserNode(string text)
         {
             Text = text;

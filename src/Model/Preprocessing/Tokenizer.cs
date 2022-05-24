@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Model.Preprocessing
 {
@@ -58,7 +55,7 @@ namespace Model.Preprocessing
             "|(\\d+[.,](\\d+)?)" +
             "|([\\p{L}\\*\\d^[:\\r\\n]]+)" +
             "|(<.*?>)" +
-            "|([\\p{P}])" + 
+            "|([\\p{P}])" +
             "|\\s+";
 
 
@@ -76,7 +73,7 @@ namespace Model.Preprocessing
         {
             List<string> filtered = new();
             foreach (var token in tokens)
-            {   
+            {
                 if (token.Trim().Length == 0)
                 {
                     continue;

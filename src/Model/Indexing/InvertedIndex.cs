@@ -1,11 +1,11 @@
 ﻿using Common.Documents;
+using Common.Documents.Basic;
+using Common.Utils;
 using Model.Preprocessing;
+using Model.Queries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Model.Queries;
-using Common.Documents.Basic;
-using Common.Utils;
 
 namespace Model.Indexing
 {

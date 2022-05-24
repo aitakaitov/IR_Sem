@@ -1,9 +1,5 @@
-﻿using System;
+﻿using Iveonik.Stemmers;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Iveonik.Stemmers;
 
 
 namespace Model.Preprocessing

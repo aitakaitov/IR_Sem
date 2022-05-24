@@ -1,11 +1,8 @@
 ﻿using Common.Documents;
-using Common.Documents.Idnes;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace Common.Utils
 {
@@ -29,7 +26,7 @@ namespace Common.Utils
                     Console.WriteLine($"error deserializing file {file} to class {typeof(ADocument)}");
                     continue;
                 };
-                documents.Add((T) document);
+                documents.Add((T)document);
             }
 
             return documents;
