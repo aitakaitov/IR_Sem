@@ -3,9 +3,11 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
+	  <TargetName>Indexer</TargetName>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <BaseOutputPath>..\..\bin</BaseOutputPath>
+    <AssemblyName>Indexer</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

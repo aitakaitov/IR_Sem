@@ -169,17 +169,6 @@ namespace Common.Utils
                         }
                         break;
                     case '(':
-                        if (sb.Length > 0)
-                        {
-                            tokens.Add(sb.ToString());
-                            sb.Clear();
-                            sb.Append(c);
-                        }
-                        else
-                        {
-                            tokens.Add(c.ToString());
-                        }
-                        break;
                     case ')':
                         if (sb.Length > 0)
                         {
@@ -201,7 +190,7 @@ namespace Common.Utils
                         {
                             if (i + 2 < queryString.Length)
                             {
-                                if ((queryString[i + 1] == 'N' && queryString[i + 2] == 'D') && IsEndOfExpression(queryString, i + 2))
+                                if (LookAheadMatches(queryString, i + 1, "ND"))
                                 {
                                     tokens.Add("AND");
                                     i += 2;
@@ -226,7 +215,7 @@ namespace Common.Utils
                         {
                             if (i + 1 < queryString.Length)
                             {
-                                if (queryString[i + 1] == 'R' && IsEndOfExpression(queryString, i + 1))
+                                if (LookAheadMatches(queryString, i + 1, "R"))
                                 {
                                     tokens.Add("OR");
                                     i++;
@@ -251,7 +240,7 @@ namespace Common.Utils
                         {
                             if (i + 2 < queryString.Length)
                             {
-                                if ((queryString[i + 1] == 'O' && queryString[i + 2] == 'T') && IsEndOfExpression(queryString, i + 2))
+                                if (LookAheadMatches(queryString, i + 1, "OT"))
                                 {
                                     tokens.Add("NOT");
                                     i += 2;
@@ -294,6 +283,28 @@ namespace Common.Utils
             }
 
             return final_tokens;
+        }
+
+        /// <summary>
+        /// Performs lookahead to see, if characters starting at given index match the given string characters
+        /// Then checks if the specified range (index + match string length) covers the whole expression
+        /// If the string matches and is an end of expression, returns true, false otherwise
+        /// </summary>
+        /// <param name="s">Source string</param>
+        /// <param name="startIndex">Target starting point in the source string</param>
+        /// <param name="match">String the source string should match from the given index</param>
+        /// <returns></returns>
+        private static bool LookAheadMatches(string s, int startIndex, string match)
+        {
+            for (int i = startIndex + 1; i < match.Length; i++)
+            {
+                if (s[i] != match[i])
+                {
+                    return false;
+                }
+            }
+
+            return IsEndOfExpression(s, startIndex + match.Length);
         }
 
         private static bool IsNextTokenOperator(List<string> tokens, int i)
