@@ -188,6 +188,11 @@ namespace IR_Sem
             if (Controller.AvailableIndexes.Count != 0)
             {
                 IndexComboBox.SelectedIndex = 0;
+                Controller.SetToHistory(IndexComboBox.SelectedItem);
+            }
+            else
+            {
+                Controller.ClearHistory();
             }
         }
 

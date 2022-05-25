@@ -136,6 +136,10 @@ namespace Controller
         public void DeleteIndex(AIndex index)
         {
             AvailableIndexes.Remove(index);
+
+            var indexName = index.ToString();
+            var removedIndexQueries = databaseContext.Queries.Where(q => q.IndexName == indexName).ToList();
+            databaseContext.Queries.RemoveRange(removedIndexQueries);
         }
 
         /// <summary>
@@ -317,6 +321,11 @@ namespace Controller
             RelevantDocuments.Clear();
             documents.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
             TotalHits = documents.Count;
+        }
+
+        public void ClearHistory()
+        {
+            QueryHistory.Clear();
         }
 
         /// <summary>
