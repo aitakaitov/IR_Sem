@@ -32,7 +32,7 @@ namespace Model.Indexing
         /// Perform vector-space search on a query
         /// </summary>
         /// <param name="query"></param>
-        /// <returns>(top K IDocs, total count of relevant)</returns>
+        /// <returns>(top K IDocs, total count of relevant, document cosine similarities)</returns>
         public abstract (List<ADocument>, int, List<float>) VectorSpaceSearch(BasicQuery query);
 
         public abstract override string ToString();

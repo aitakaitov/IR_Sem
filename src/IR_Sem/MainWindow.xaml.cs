@@ -300,6 +300,12 @@ namespace IR_Sem
                 Dispatcher.Invoke(() => SetControlsEnabled(true));
             }
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            Application.Current.Shutdown();
+        }
     }
 }
 

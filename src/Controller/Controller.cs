@@ -157,17 +157,17 @@ namespace Controller
             var documents = SelectedIndex.BooleanSearch(new()
             {
                 QueryText = queryText,
-                TopCount = 100
+                TopCount = -1
             });
 
             RelevantDocuments.Clear();
             documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
             TotalHits = documents.Item2;
 
-            StoreQueryResults(documents.Item1, queryText, EQueryType.BOOLEAN);
+            StoreQueryResults(documents.Item1, documents.Item2, queryText, EQueryType.BOOLEAN);
         }
 
-        private void StoreQueryResults(List<ADocument> documents, string query, EQueryType type)
+        private void StoreQueryResults(List<ADocument> documents, int totalHits, string query, EQueryType type)
         {
             List<DocumentInfo> documentInfos = new List<DocumentInfo>();
             for (int i = 0; i < documents.Count; i++)
@@ -185,7 +185,8 @@ namespace Controller
                 Documents = documentInfos,
                 DateQueried = DateTime.Now,
                 QueryType = type,
-                IndexName = SelectedIndex.ToString()        // At this point we know an index is selected, because we had to make a query on it first
+                IndexName = SelectedIndex.ToString(),       // At this point we know an index is selected, because we had to make a query on it first
+                TotalHits = totalHits
             };
 
             databaseContext.Queries.Add(qr);
@@ -209,14 +210,14 @@ namespace Controller
             var documents = SelectedIndex.VectorSpaceSearch(new()
             {
                 QueryText = queryText,
-                TopCount = 100
+                TopCount = -1
             });
 
             RelevantDocuments.Clear();
             documents.Item1.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
             TotalHits = documents.Item2;
 
-            StoreQueryResults(documents.Item1, queryText, EQueryType.VECTOR);
+            StoreQueryResults(documents.Item1, documents.Item2, queryText, EQueryType.VECTOR);
         }
 
         /// <summary>
@@ -320,7 +321,7 @@ namespace Controller
             var documents = SelectedIndex.GetDocumentsByIds(documentIds);
             RelevantDocuments.Clear();
             documents.ForEach(d => RelevantDocuments.Add(d.GetRelevantText()));
-            TotalHits = documents.Count;
+            TotalHits = queryResult.TotalHits;
         }
 
         public void ClearHistory()
